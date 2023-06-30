@@ -1,0 +1,642 @@
+library(ggstar)
+library(gridExtra)
+library(pubtheme)
+
+# Plot rink regions with corresponding shot counts
+plot.regions <- function(d) {
+  region.outline.color <- '#000000'
+  background.color <- '#ffffff'
+  gradient.low.color <- '#b0f0ce'
+  gradient.high.color <- '#055229'
+  
+  fill.label <- 'Shot attempts'
+  
+  regions.fill.limits <- c(250, 680)
+  regions.fill.breaks <- c(250, 680)
+  regions.fill.labels <- c('250', '680')
+  
+  regions.plot <- rink +
+    geom_polygon(data = d,
+                 aes(x = x, y = y,
+                     fill = region.shot.count,
+                     group = region),
+                 alpha = 0.6,
+                 size = 0.2,
+                 color = region.outline.color,
+                 show.legend = TRUE) +
+    scale_fill_gradient(low = gradient.low.color, high = gradient.high.color, na.value = NA,
+                        limits = regions.fill.limits,
+                        breaks = regions.fill.breaks,
+                        labels = regions.fill.labels,
+                        oob = squish) +
+    labs(title = 'Rink regions',
+         subtitle = 'Data plotted by region in all location visualizations',
+         caption = 'Created by github.com/j-cqln',
+         fill = fill.label) +
+    ylim(c(-100.1, -24)) +
+    xlim(c(-42.6, 42.6)) +
+    theme_pub(type = 'map', base_size = 36/3) +
+    theme(plot.background = element_rect(fill = background.color),
+          panel.background = element_rect(fill = background.color),
+          legend.background = element_rect(fill = background.color),
+          legend.position = 'top',
+          legend.box = 'horizontal',
+          legend.box.just = 'left',
+          legend.box.margin = margin(t = 0, r = 0, b = 0, l = 0, unit = 'pt'),
+          legend.direction = 'horizontal',
+          legend.justification = c(0, 0),
+          legend.margin = margin(t = 0, r = 20, b = 0, l = 0, unit = 'pt')) +
+    guides(fill = guide_colorbar(order = 2,
+                                 title.position = 'top',
+                                 title.hjust = 0))
+  
+  return(regions.plot)
+}
+
+# Plot average xG by region
+plot.xg <- function(d) {
+  region.outline.color <- '#000000'
+  background.color <- '#ffffff'
+  gradient.low.color <- '#b0f0ce'
+  gradient.high.color <- '#055229'
+  
+  fill.label <- 'xG'
+  
+  regions.fill.limits <- c(0.014, 0.15)
+  regions.fill.breaks <- c(0.015, 0.15)
+  regions.fill.labels <- c('0.015', '0.15')
+  
+  xg.plot <- rink +
+    geom_polygon(data = d,
+                 aes(x = x, y = y,
+                     fill = region.xgoal.all,
+                     group = region),
+                 alpha = 0.6,
+                 size = 0.2,
+                 color = region.outline.color,
+                 show.legend = TRUE) +
+    scale_fill_gradient(low = gradient.low.color, high = gradient.high.color, na.value = NA,
+                        limits = regions.fill.limits,
+                        breaks = regions.fill.breaks,
+                        labels = regions.fill.labels,
+                        oob = squish) +
+    labs(title = 'xG',
+         subtitle = 'Expected goals, model trained on all shot attempts',
+         caption = 'Created by github.com/j-cqln',
+         fill = fill.label) +
+    ylim(c(-100.1, -24)) +
+    xlim(c(-42.6, 42.6)) +
+    theme_pub(type = 'map', base_size = 36/3) +
+    theme(plot.background = element_rect(fill = background.color),
+          panel.background = element_rect(fill = background.color),
+          legend.background = element_rect(fill = background.color),
+          legend.position = 'top',
+          legend.box = 'horizontal',
+          legend.box.just = 'left',
+          legend.box.margin = margin(t = 0, r = 0, b = 0, l = 0, unit = 'pt'),
+          legend.direction = 'horizontal',
+          legend.justification = c(0, 0),
+          legend.margin = margin(t = 0, r = 20, b = 0, l = 0, unit = 'pt')) +
+    guides(fill = guide_colorbar(order = 2,
+                                 title.position = 'top',
+                                 title.hjust = 0))
+  
+  return(xg.plot)
+}
+
+# Plot rebound value
+plot.rebounds1 <- function(d) {
+  background.color <- '#ffffff'
+  gradient.low.color <- '#bedceb'
+  gradient.high.color <- '#004b71'
+
+  size.label <- 'Shot attempts'
+  
+  # 1
+  rebounds.plot.fill.limits <- c(0.2, 0.45)
+  rebounds.plot.fill.breaks <- c(0.25, 0.45)
+  rebounds.plot.fill.labels <- c('0.25', '0.45')
+  
+  rebounds.plot.size.limits <- c(0, 45)
+  rebounds.plot.size.breaks <- c(5, 20, 35)
+  rebounds.plot.size.labels <- c('5', '20', '35+')
+  
+  # 2
+  rebound.shots.plot.fill.limits <- c(0.015, 0.075)
+  rebound.shots.plot.fill.breaks <- c(0.015, 0.075)
+  rebound.shots.plot.fill.labels <- c('0.015', '0.075')
+  
+  rebound.shots.plot.size.limits <- c(0, 15)
+  rebound.shots.plot.size.breaks <- c(5, 10, 15)
+  rebound.shots.plot.size.labels <- c('5', '10', '15+')
+  
+  # 3
+  xg.plot.fill.limits <- c(0.08, 0.18)
+  xg.plot.fill.breaks <- c(0.08, 0.18)
+  xg.plot.fill.labels <- c('0.08', '0.18')
+  
+  xg.plot.size.limits <- c(0, 6)
+  xg.plot.size.breaks <- c(1, 3, 5)
+  xg.plot.size.labels <- c('1', '3', '5+')
+  
+  # 4
+  rebounds.total.plot.fill.limits <- c(0.0005, 0.006)
+  rebounds.total.plot.fill.breaks <- c(0.0005, 0.005)
+  rebounds.total.plot.fill.labels <- c('0.0005', '0.005')
+  
+  rebounds.total.plot.size.limits <- c(0, 45)
+  rebounds.total.plot.size.breaks <- c(5, 20, 35)
+  rebounds.total.plot.size.labels <- c('5', '20', '35+')
+  
+  # 1
+  shots <- get.shots(d)
+  shots.hexbin <- hexbin::hexbin(shots$x, shots$y, xbins = 21, IDs = TRUE)
+  shots.hexbin.df <- data.frame(hexbin::hcell2xy(shots.hexbin),
+                                cell = shots.hexbin@cell,
+                                count = shots.hexbin@count)
+  shots$cell <- shots.hexbin@cID
+  
+  shots <- shots %>%
+    group_by(cell) %>%
+    summarise(shot.count = n(),
+              rebound.prob.plot = mean(region.rebound.prob)) %>%
+    ungroup() %>%
+    right_join(shots.hexbin.df, by = 'cell') %>%
+    select(cell, x, y, count, shot.count, rebound.prob.plot)
+  
+  rebounds.plot <- rink +
+    geom_star(data = shots,
+              aes(x = x, y = y,
+                  fill = rebound.prob.plot,
+                  size = shot.count),
+              color = NA,
+              starshape = 'hexagon',
+              show.legend = TRUE) +
+    scale_fill_gradient(low = gradient.low.color, high = gradient.high.color, na.value = NA,
+                        limits = rebounds.plot.fill.limits,
+                        breaks = rebounds.plot.fill.breaks,
+                        labels = rebounds.plot.fill.labels) +
+    scale_size_area(limits = rebounds.plot.size.limits,
+                    breaks = rebounds.plot.size.breaks,
+                    labels = rebounds.plot.size.labels,
+                    oob = squish) +
+    labs(title = 'Shots generating rebound',
+         subtitle = 'Probability of shot creating rebound',
+         caption = 'Created by github.com/j-cqln',
+         fill = 'P(rebound)',
+         size = size.label) +
+    ylim(c(-100.1, -24)) +
+    xlim(c(-42.6, 42.6)) +
+    theme_pub(type = 'map', base_size = 36/3) +
+    theme(plot.background = element_rect(fill = background.color),
+          panel.background = element_rect(fill = background.color),
+          legend.background = element_rect(fill = background.color),
+          legend.position = 'top',
+          legend.box = 'horizontal',
+          legend.box.just = 'left',
+          legend.box.margin = margin(t = 0, r = 0, b = 0, l = 0, unit = 'pt'),
+          legend.direction = 'horizontal',
+          legend.justification = c(0, 0),
+          legend.margin = margin(t = 0, r = 20, b = 0, l = 0, unit = 'pt')) +
+    guides(size = guide_legend(order = 1,
+                               nrow = 1,
+                               title.position = 'top',
+                               title.hjust = 0,
+                               override.aes = list(fill = pubdarkgray)), 
+           fill = guide_colorbar(order = 2,
+                                 title.position = 'top',
+                                 title.hjust = 0))
+  
+  # 2
+  rebounds <- get.shots.generating.rebounds(d)
+  rebounds.hexbin <- hexbin::hexbin(rebounds$x, rebounds$y, xbins = 21, IDs = TRUE)
+  rebounds.hexbin.df <- data.frame(hexbin::hcell2xy(rebounds.hexbin),
+                                   cell = rebounds.hexbin@cell,
+                                   count = rebounds.hexbin@count)
+  rebounds$cell <- rebounds.hexbin@cID
+  
+  rebounds <- rebounds %>%
+    group_by(cell) %>%
+    summarise(shot.count = n(),
+              rebound.shot.prob.plot = mean(region.rebound.shot.prob)) %>%
+    ungroup() %>%
+    right_join(rebounds.hexbin.df, by = 'cell') %>%
+    select(cell, x, y, count, shot.count, rebound.shot.prob.plot)
+  
+  rebound.shots.plot <- rink +
+    geom_star(data = rebounds,
+              aes(x = x, y = y,
+                  fill = rebound.shot.prob.plot,
+                  size = shot.count),
+              color = NA,
+              starshape = 'hexagon',
+              show.legend = TRUE) +
+    scale_fill_gradient(low = gradient.low.color, high = gradient.high.color, na.value = NA,
+                        limits = rebound.shots.plot.fill.limits,
+                        breaks = rebound.shots.plot.fill.breaks,
+                        labels = rebound.shots.plot.fill.labels) +
+    scale_size_area(limits = rebound.shots.plot.size.limits,
+                    breaks = rebound.shots.plot.size.breaks,
+                    labels = rebound.shots.plot.size.labels,
+                    oob = squish) +
+    labs(title = 'Shots generating rebound shot',
+         subtitle = 'Probability of shot creating rebound shot from rebound',
+         caption = '',
+         fill = 'P(rebound shot | rebound)',
+         size = size.label) +
+    ylim(c(-100.1, -24)) +
+    xlim(c(-42.6, 42.6)) +
+    theme_pub(type = 'map', base_size = 36/3) +
+    theme(plot.background = element_rect(fill = background.color),
+          panel.background = element_rect(fill = background.color),
+          legend.background = element_rect(fill = background.color),
+          legend.position = 'top',
+          legend.box = 'horizontal',
+          legend.box.just = 'left',
+          legend.box.margin = margin(t = 0, r = 0, b = 0, l = 0, unit = 'pt'),
+          legend.direction = 'horizontal',
+          legend.justification = c(0, 0),
+          legend.margin = margin(t = 0, r = 20, b = 0, l = 0, unit = 'pt')) +
+    guides(size = guide_legend(order = 1,
+                               nrow = 1,
+                               title.position = 'top',
+                               title.hjust = 0,
+                               override.aes = list(fill = pubdarkgray)), 
+           fill = guide_colorbar(order = 2,
+                                 title.position = 'top',
+                                 title.hjust = 0))
+  
+  # 3
+  rebound.shots <- get.shots.generating.rebound.shots(d)
+  rebound.shots.hexbin <- hexbin::hexbin(rebound.shots$x, rebound.shots$y, xbins = 21, IDs = TRUE)
+  rebound.shots.hexbin.df <- data.frame(hexbin::hcell2xy(rebound.shots.hexbin),
+                                        cell = rebound.shots.hexbin@cell,
+                                        count = rebound.shots.hexbin@count)
+  rebound.shots$cell <- rebound.shots.hexbin@cID
+  
+  rebound.shots <- rebound.shots %>%
+    group_by(cell) %>%
+    summarise(shot.count = n(),
+              xg.plot = mean(region.rebound.shot.xg)) %>%
+    ungroup() %>%
+    right_join(rebound.shots.hexbin.df, by = 'cell') %>%
+    select(cell, x, y, count, shot.count, xg.plot)
+  
+  xg.plot <- rink +
+    geom_star(data = rebound.shots,
+              aes(x = x, y = y,
+                  fill = xg.plot,
+                  size = shot.count),
+              color = NA,
+              starshape = 'hexagon',
+              show.legend = TRUE) +
+    scale_fill_gradient(low = gradient.low.color, high = gradient.high.color, na.value = NA,
+                        limits = xg.plot.fill.limits,
+                        breaks = xg.plot.fill.breaks,
+                        labels = xg.plot.fill.labels) +
+    scale_size_area(limits = xg.plot.size.limits,
+                    breaks = xg.plot.size.breaks,
+                    labels = xg.plot.size.labels,
+                    oob = squish) +
+    labs(title = 'Isolated xG of rebound shots',
+         subtitle = 'Rebound shot goal probability ignoring last event',
+         caption = '',
+         fill = 'Isolated rebound shot xG',
+         size = size.label) +
+    ylim(c(-100.1, -24)) +
+    xlim(c(-42.6, 42.6)) +
+    theme_pub(type = 'map', base_size = 36/3) +
+    theme(plot.background = element_rect(fill = background.color),
+          panel.background = element_rect(fill = background.color),
+          legend.background = element_rect(fill = background.color),
+          legend.position = 'top',
+          legend.box = 'horizontal',
+          legend.box.just = 'left',
+          legend.box.margin = margin(t = 0, r = 0, b = 0, l = 0, unit = 'pt'),
+          legend.direction = 'horizontal',
+          legend.justification = c(0, 0),
+          legend.margin = margin(t = 0, r = 20, b = 0, l = 0, unit = 'pt')) +
+    guides(size = guide_legend(order = 1,
+                               nrow = 1,
+                               title.position = 'top',
+                               title.hjust = 0,
+                               override.aes = list(fill = pubdarkgray)), 
+           fill = guide_colorbar(order = 2,
+                                 title.position = 'top',
+                                 title.hjust = 0))
+  
+  # 4
+  rebounds.total <- get.shots(d)
+  rebounds.total.hexbin <- hexbin::hexbin(rebounds.total$x, rebounds.total$y, xbins = 21, IDs = TRUE)
+  rebounds.total.hexbin.df <- data.frame(hexbin::hcell2xy(rebounds.total.hexbin),
+                                         cell = rebounds.total.hexbin@cell,
+                                         count = rebounds.total.hexbin@count)
+  rebounds.total$cell <- rebounds.total.hexbin@cID
+  
+  rebounds.total <- rebounds.total %>%
+    group_by(cell) %>%
+    summarise(shot.count = n(),
+              rebounds.total.plot = mean(region.rebound.total)) %>%
+    ungroup() %>%
+    right_join(rebounds.total.hexbin.df, by = 'cell') %>%
+    select(cell, x, y, count, shot.count, rebounds.total.plot)
+  
+  rebounds.total.plot <- rink +
+    geom_star(data = rebounds.total,
+              aes(x = x, y = y,
+                  fill = rebounds.total.plot,
+                  size = shot.count),
+              color = NA,
+              starshape = 'hexagon',
+              show.legend = TRUE) +
+    scale_fill_gradient(low = gradient.low.color, high = gradient.high.color, na.value = NA,
+                        limits = rebounds.total.plot.fill.limits,
+                        breaks = rebounds.total.plot.fill.breaks,
+                        labels = rebounds.total.plot.fill.labels) +
+    scale_size_area(limits = rebounds.total.plot.size.limits,
+                    breaks = rebounds.total.plot.size.breaks,
+                    labels = rebounds.total.plot.size.labels,
+                    oob = squish) +
+    labs(title = 'Overall \'rebound value\' of shots',
+         subtitle = 'Measure of original shot\'s isolated rebound quality',
+         caption = '',
+         fill = 'Rebound value',
+         size = size.label) +
+    ylim(c(-100.1, -24)) +
+    xlim(c(-42.6, 42.6)) +
+    theme_pub(type = 'map', base_size = 36/3) +
+    theme(plot.background = element_rect(fill = background.color),
+          panel.background = element_rect(fill = background.color),
+          legend.background = element_rect(fill = background.color),
+          legend.position = 'top',
+          legend.box = 'horizontal',
+          legend.box.just = 'left',
+          legend.box.margin = margin(t = 0, r = 0, b = 0, l = 0, unit = 'pt'),
+          legend.direction = 'horizontal',
+          legend.justification = c(0, 0),
+          legend.margin = margin(t = 0, r = 20, b = 0, l = 0, unit = 'pt')) +
+    guides(size = guide_legend(order = 1,
+                               nrow = 1,
+                               title.position = 'top',
+                               title.hjust = 0,
+                               override.aes = list(fill = pubdarkgray)), 
+           fill = guide_colorbar(order = 2,
+                                 title.position = 'top',
+                                 title.hjust = 0))
+  
+  overall.rebounds <- grid.arrange(rebounds.plot,
+                                   rebound.shots.plot,
+                                   xg.plot,
+                                   rebounds.total.plot,
+                                   ncol = 4)
+  return(overall.rebounds)
+}
+
+# Plot xG* and xG comparison
+plot.rebounds2 <- function(d) {
+  background.color <- '#ffffff'
+  gradient.low.color <- '#bedceb'
+  gradient.high.color <- '#004b71'
+  diff.gradient.low.color <- '#3597c9'
+  diff.gradient.high.color <- '#c8213e'
+  
+  size.label <- 'Shot attempts'
+  
+  # 1
+  xg.no.last.plot.fill.limits <- c(0.013, 0.15)
+  xg.no.last.plot.fill.breaks <- c(0.015, 0.15)
+  xg.no.last.plot.fill.labels <- c('0.015', '0.15')
+  
+  xg.no.last.plot.size.limits <- c(0, 45)
+  xg.no.last.plot.size.breaks <- c(5, 20, 35)
+  xg.no.last.plot.size.labels <- c('5', '20', '35+')
+  
+  # 2
+  rebounds.total.plot.fill.limits <- c(0.0005, 0.006)
+  rebounds.total.plot.fill.breaks <- c(0.0005, 0.005)
+  rebounds.total.plot.fill.labels <- c('0.0005', '0.005')
+  
+  rebounds.total.plot.size.limits <- c(0, 45)
+  rebounds.total.plot.size.breaks <- c(5, 20, 35)
+  rebounds.total.plot.size.labels <- c('5', '20', '35+')
+  
+  # 3
+  sum.plot.fill.limits <- c(0.014, 0.16)
+  sum.plot.fill.breaks <- c(0.015, 0.15)
+  sum.plot.fill.labels <- c('0.015', '0.15')
+  
+  sum.plot.size.limits <- c(0, 45)
+  sum.plot.size.breaks <- c(5, 20, 35)
+  sum.plot.size.labels <- c('5', '20', '35+')
+  
+  # 4
+  diff.plot.fill.limits <- c(-0.005, 0.006)
+  diff.plot.fill.breaks <- c(-0.005, 0.005)
+  diff.plot.fill.labels <- c('-0.005', '0.005')
+  
+  diff.plot.size.limits <- c(0, 45)
+  diff.plot.size.breaks <- c(5, 20, 35)
+  diff.plot.size.labels <- c('5', '20', '35+')
+  
+  shots <- get.shots(d)
+  shots.hexbin <- hexbin::hexbin(shots$x, shots$y, xbins = 21, IDs = TRUE)
+  shots.hexbin.df <- data.frame(hexbin::hcell2xy(shots.hexbin),
+                                cell = shots.hexbin@cell,
+                                count = shots.hexbin@count)
+  shots$cell <- shots.hexbin@cID
+  
+  shots <- shots %>%
+    group_by(cell) %>%
+    summarise(shot.count = n(),
+              xg.no.last.plot = mean(region.xgoal.all.no.last),
+              rebounds.total.plot = mean(region.rebound.total),
+              sum.plot = mean(region.xgoal.all.no.last) + mean(region.rebound.total),
+              diff.plot = mean(region.xgoal.all.no.last) + mean(region.rebound.total) - mean(region.xgoal.all)) %>%
+    ungroup() %>%
+    right_join(shots.hexbin.df, by = 'cell') %>%
+    select(cell, x, y, count, shot.count, xg.no.last.plot, rebounds.total.plot, sum.plot, diff.plot)
+  
+  # 1
+  xg.no.last.plot <- rink +
+    geom_star(data = shots,
+              aes(x = x, y = y,
+                  fill = xg.no.last.plot,
+                  size = shot.count),
+              color = NA,
+              starshape = 'hexagon',
+              show.legend = TRUE) +
+    scale_fill_gradient(low = gradient.low.color, high = gradient.high.color, na.value = NA,
+                        limits = xg.no.last.plot.fill.limits,
+                        breaks = xg.no.last.plot.fill.breaks,
+                        labels = xg.no.last.plot.fill.labels) +
+    scale_size_area(limits = xg.no.last.plot.size.limits,
+                    breaks = xg.no.last.plot.size.breaks,
+                    labels = xg.no.last.plot.size.labels,
+                    oob = squish) +
+    labs(title = 'Isolated xG of original shots',
+         subtitle = 'Expected goals of original shots, ignoring last event',
+         caption = 'Created by github.com/j-cqln',
+         fill = 'Isolated shot xG',
+         size = size.label) +
+    ylim(c(-100.1, -24)) +
+    xlim(c(-42.6, 42.6)) +
+    theme_pub(type = 'map', base_size = 36/3) +
+    theme(plot.background = element_rect(fill = background.color),
+          panel.background = element_rect(fill = background.color),
+          legend.background = element_rect(fill = background.color),
+          legend.position = 'top',
+          legend.box = 'horizontal',
+          legend.box.just = 'left',
+          legend.box.margin = margin(t = 0, r = 0, b = 0, l = 0, unit = 'pt'),
+          legend.direction = 'horizontal',
+          legend.justification = c(0, 0),
+          legend.margin = margin(t = 0, r = 20, b = 0, l = 0, unit = 'pt')) +
+    guides(size = guide_legend(order = 1,
+                               nrow = 1,
+                               title.position = 'top',
+                               title.hjust = 0,
+                               override.aes = list(fill = pubdarkgray)), 
+           fill = guide_colorbar(order = 2,
+                                 title.position = 'top',
+                                 title.hjust = 0))
+  
+  # 2
+  rebounds.total.plot <- rink +
+    geom_star(data = shots,
+              aes(x = x, y = y,
+                  fill = rebounds.total.plot,
+                  size = shot.count),
+              color = NA,
+              starshape = 'hexagon',
+              show.legend = TRUE) +
+    scale_fill_gradient(low = gradient.low.color, high = gradient.high.color, na.value = NA,
+                        limits = rebounds.total.plot.fill.limits,
+                        breaks = rebounds.total.plot.fill.breaks,
+                        labels = rebounds.total.plot.fill.labels) +
+    scale_size_area(limits = rebounds.total.plot.size.limits,
+                    breaks = rebounds.total.plot.size.breaks,
+                    labels = rebounds.total.plot.size.labels,
+                    oob = squish) +
+    labs(title = 'Overall \'rebound value\' of shots',
+         subtitle = 'Measure of original shot\'s isolated rebound quality',
+         caption = '',
+         fill = 'Rebound value',
+         size = size.label) +
+    ylim(c(-100.1, -24)) +
+    xlim(c(-42.6, 42.6)) +
+    theme_pub(type = 'map', base_size = 36/3) +
+    theme(plot.background = element_rect(fill = background.color),
+          panel.background = element_rect(fill = background.color),
+          legend.background = element_rect(fill = background.color),
+          legend.position = 'top',
+          legend.box = 'horizontal',
+          legend.box.just = 'left',
+          legend.box.margin = margin(t = 0, r = 0, b = 0, l = 0, unit = 'pt'),
+          legend.direction = 'horizontal',
+          legend.justification = c(0, 0),
+          legend.margin = margin(t = 0, r = 20, b = 0, l = 0, unit = 'pt')) +
+    guides(size = guide_legend(order = 1,
+                               nrow = 1,
+                               title.position = 'top',
+                               title.hjust = 0,
+                               override.aes = list(fill = pubdarkgray)), 
+           fill = guide_colorbar(order = 2,
+                                 title.position = 'top',
+                                 title.hjust = 0))
+  
+  # 3
+  sum.plot <- rink +
+    geom_star(data = shots,
+              aes(x = x, y = y,
+                  fill = sum.plot,
+                  size = shot.count),
+              color = NA,
+              starshape = 'hexagon',
+              show.legend = TRUE) +
+    scale_fill_gradient(low = gradient.low.color, high = gradient.high.color, na.value = NA,
+                        limits = sum.plot.fill.limits,
+                        breaks = sum.plot.fill.breaks,
+                        labels = sum.plot.fill.labels) +
+    scale_size_area(limits = sum.plot.size.limits,
+                    breaks = sum.plot.size.breaks,
+                    labels = sum.plot.size.labels,
+                    oob = squish) +
+    labs(title = 'Isolated xG with rebound value (xG*)',
+         subtitle = 'Sum of isolated xG and rebound value (left 2 plots)',
+         caption = '',
+         fill = 'Isolated xG + rebound value',
+         size = size.label) +
+    ylim(c(-100.1, -24)) +
+    xlim(c(-42.6, 42.6)) +
+    theme_pub(type = 'map', base_size = 36/3) +
+    theme(plot.background = element_rect(fill = background.color),
+          panel.background = element_rect(fill = background.color),
+          legend.background = element_rect(fill = background.color),
+          legend.position = 'top',
+          legend.box = 'horizontal',
+          legend.box.just = 'left',
+          legend.box.margin = margin(t = 0, r = 0, b = 0, l = 0, unit = 'pt'),
+          legend.direction = 'horizontal',
+          legend.justification = c(0, 0),
+          legend.margin = margin(t = 0, r = 20, b = 0, l = 0, unit = 'pt')) +
+    guides(size = guide_legend(order = 1,
+                               nrow = 1,
+                               title.position = 'top',
+                               title.hjust = 0,
+                               override.aes = list(fill = pubdarkgray)), 
+           fill = guide_colorbar(order = 2,
+                                 title.position = 'top',
+                                 title.hjust = 0))
+  
+  # 4
+  diff.plot <- rink +
+    geom_star(data = shots,
+              aes(x = x, y = y,
+                  fill = diff.plot,
+                  size = shot.count),
+              color = NA,
+              starshape = 'hexagon',
+              show.legend = TRUE) +
+    scale_fill_gradient(low = diff.gradient.low.color, high = diff.gradient.high.color, na.value = NA,
+                        limits = diff.plot.fill.limits,
+                        breaks = diff.plot.fill.breaks,
+                        labels = diff.plot.fill.labels) +
+    scale_size_area(limits = diff.plot.size.limits,
+                    breaks = diff.plot.size.breaks,
+                    labels = diff.plot.size.labels,
+                    oob = squish) +
+    labs(title = 'xG* vs xG with last event',
+         subtitle = 'Difference between the two models',
+         caption = '',
+         fill = 'xG* - xG',
+         size = size.label) +
+    ylim(c(-100.1, -24)) +
+    xlim(c(-42.6, 42.6)) +
+    theme_pub(type = 'map', base_size = 36/3) +
+    theme(plot.background = element_rect(fill = background.color),
+          panel.background = element_rect(fill = background.color),
+          legend.background = element_rect(fill = background.color),
+          legend.position = 'top',
+          legend.box = 'horizontal',
+          legend.box.just = 'left',
+          legend.box.margin = margin(t = 0, r = 0, b = 0, l = 0, unit = 'pt'),
+          legend.direction = 'horizontal',
+          legend.justification = c(0, 0),
+          legend.margin = margin(t = 0, r = 20, b = 0, l = 0, unit = 'pt')) +
+    guides(size = guide_legend(order = 1,
+                               nrow = 1,
+                               title.position = 'top',
+                               title.hjust = 0,
+                               override.aes = list(fill = pubdarkgray)), 
+           fill = guide_colorbar(order = 2,
+                                 title.position = 'top',
+                                 title.hjust = 0))
+  
+  xg.rebounds <- grid.arrange(xg.no.last.plot,
+                              rebounds.total.plot,
+                              sum.plot,
+                              diff.plot,
+                              ncol = 4)
+  
+  return(xg.rebounds)
+}
