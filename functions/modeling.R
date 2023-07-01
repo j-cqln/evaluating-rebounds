@@ -2,6 +2,7 @@ library(lme4)
 library(splines)
 library(ModelMetrics)
 
+# Generalized linear mixed model used for xG and xG*
 model <- function(x, y) {
   y <- as.logical(y)
   

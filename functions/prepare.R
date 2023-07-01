@@ -37,10 +37,8 @@ process.names <- function(d) {
            xg.all.attempts = xg_all_attempts,
            creates.rebound = createsrebound,
            shot.type = shottype,
-           shot.aim = shotaim)
-  
-  # d <- d %>%
-  #   select()
+           shot.aim = shotaim) %>%
+    mutate(season = 2023)
   
   return(d)
 }
@@ -293,16 +291,29 @@ get.regions <- function(d) {
 }
 
 # Find region-specific information for rebounds
-get.regions.rebounds <- function(d, regions) {
-  d2 <- d %>%
-    filter(event == 'shot') %>%
-    mutate(rebound.shot.xg = ifelse(creates.rebound.shot == 1,
-                                    lead(xgoal.all.no.last), NA))
-  d2 <- d2 %>% select(id, rebound.shot.xg)
-  d <- left_join(d, d2, by = 'id')
-  
-  d <- d %>%
-    mutate(rebound.shot.xg = ifelse(event == 'shot', rebound.shot.xg, NA))
+get.regions.rebounds <- function(d, regions, unblocked = FALSE) {
+  if (!unblocked) {
+    d2 <- d %>%
+      filter(event == 'shot') %>%
+      mutate(rebound.shot.xg = ifelse(creates.rebound.shot == 1,
+                                      lead(xgoal.all.no.last), NA))
+    d2 <- d2 %>% select(id, rebound.shot.xg)
+    d <- left_join(d, d2, by = 'id')
+    
+    d <- d %>%
+      mutate(rebound.shot.xg = ifelse(event == 'shot', rebound.shot.xg, NA))
+    
+  } else {
+    d2 <- d %>%
+      filter((event == 'shot') & !(type %in% c('slotblocked', 'outsideblocked'))) %>%
+      mutate(rebound.shot.xg = ifelse(creates.rebound.shot == 1,
+                                      lead(xgoal.unblocked.no.last), NA))
+    d2 <- d2 %>% select(id, rebound.shot.xg)
+    d <- left_join(d, d2, by = 'id')
+    
+    d <- d %>%
+      mutate(rebound.shot.xg = ifelse(event == 'shot', rebound.shot.xg, NA))
+  }
   
   d$region.rebound.prob <- NA
   d$region.rebound.shot.prob <- NA
@@ -311,33 +322,71 @@ get.regions.rebounds <- function(d, regions) {
   d$region.xgoal.all <- NA
   d$region.xgoal.all.no.last <- NA
   
+  d$region.rebound.prob.unblocked <- NA
+  d$region.rebound.shot.prob.unblocked <- NA
+  d$region.rebound.shot.xg.unblocked <- NA
+  d$region.shot.count.unblocked <- NA
+  d$region.xgoal.unblocked <- NA
+  d$region.xgoal.unblocked.no.last <- NA
+  
   for (region.name in region.names) {
-    # All shot attempts
-    region.rebound.prob <- sum(d$creates.rebound[(d$event == 'shot') & (d$region == region.name)]) / nrow(d[(d$event == 'shot') & (d$region == region.name), ])
-    region.rebound.shot.prob <- sum(d$creates.rebound.shot[(d$event == 'shot') & (d$region == region.name)]) / nrow(d[(d$event == 'shot') & (d$region == region.name), ])
-    region.rebound.shot.xg <- mean(d$rebound.shot.xg[(d$event == 'shot') & (d$region == region.name)], na.rm = TRUE)
-    region.xgoal.all <- mean(d$xgoal.all[(d$event == 'shot') & (d$region == region.name)], na.rm = TRUE)
-    region.xgoal.all.no.last <- mean(d$xgoal.all.no.last[(d$event == 'shot') & (d$region == region.name)], na.rm = TRUE)
-    
-    regions$region.rebound.prob[regions$region == region.name] <- region.rebound.prob
-    regions$region.rebound.shot.prob[regions$region == region.name] <- region.rebound.shot.prob
-    regions$region.rebound.shot.xg[regions$region == region.name] <- region.rebound.shot.xg
-    regions$region.xgoal.all[regions$region == region.name] <- region.xgoal.all
-    regions$region.xgoal.all.no.last[regions$region == region.name] <- region.xgoal.all.no.last
-    
-    d$region.rebound.prob[d$region == region.name] <- region.rebound.prob
-    d$region.rebound.shot.prob[d$region == region.name] <- region.rebound.shot.prob
-    d$region.rebound.shot.xg[d$region == region.name] <- region.rebound.shot.xg
-    d$region.xgoal.all[d$region == region.name] <- region.xgoal.all
-    d$region.xgoal.all.no.last[d$region == region.name] <- region.xgoal.all.no.last
-    
-    region.shot.count <- nrow(d[(d$event == 'shot') & (d$region == region.name), ])
-    d$region.shot.count[d$region == region.name] <- region.shot.count
-    regions$region.shot.count[regions$region == region.name] <- region.shot.count
+    if (!unblocked) {
+      # All shot attempts
+      region.rebound.prob <- sum(d$creates.rebound[(d$event == 'shot') & (d$region == region.name)]) / nrow(d[(d$event == 'shot') & (d$region == region.name), ])
+      region.rebound.shot.prob <- sum(d$creates.rebound.shot[(d$event == 'shot') & (d$region == region.name)]) / nrow(d[(d$event == 'shot') & (d$region == region.name), ])
+      region.rebound.shot.xg <- mean(d$rebound.shot.xg[(d$event == 'shot') & (d$region == region.name)], na.rm = TRUE)
+      region.xgoal.all <- mean(d$xgoal.all[(d$event == 'shot') & (d$region == region.name)], na.rm = TRUE)
+      region.xgoal.all.no.last <- mean(d$xgoal.all.no.last[(d$event == 'shot') & (d$region == region.name)], na.rm = TRUE)
+      
+      regions$region.rebound.prob[regions$region == region.name] <- region.rebound.prob
+      regions$region.rebound.shot.prob[regions$region == region.name] <- region.rebound.shot.prob
+      regions$region.rebound.shot.xg[regions$region == region.name] <- region.rebound.shot.xg
+      regions$region.xgoal.all[regions$region == region.name] <- region.xgoal.all
+      regions$region.xgoal.all.no.last[regions$region == region.name] <- region.xgoal.all.no.last
+      
+      d$region.rebound.prob[d$region == region.name] <- region.rebound.prob
+      d$region.rebound.shot.prob[d$region == region.name] <- region.rebound.shot.prob
+      d$region.rebound.shot.xg[d$region == region.name] <- region.rebound.shot.xg
+      d$region.xgoal.all[d$region == region.name] <- region.xgoal.all
+      d$region.xgoal.all.no.last[d$region == region.name] <- region.xgoal.all.no.last
+      
+      region.shot.count <- nrow(d[(d$event == 'shot') & (d$region == region.name), ])
+      d$region.shot.count[d$region == region.name] <- region.shot.count
+      regions$region.shot.count[regions$region == region.name] <- region.shot.count
+      
+    } else {
+      # Unblocked shot attempts
+      region.rebound.prob.unblocked <- sum(d$creates.rebound[(d$event == 'shot') & !(d$type %in% c('slotblocked', 'outsideblocked')) & (d$region == region.name)]) / nrow(d[(d$event == 'shot') & !(d$type %in% c('slotblocked', 'outsideblocked')) & (d$region == region.name), ])
+      region.rebound.shot.prob.unblocked <- sum(d$creates.rebound.shot[(d$event == 'shot') & !(d$type %in% c('slotblocked', 'outsideblocked')) & (d$region == region.name)]) / nrow(d[(d$event == 'shot') & !(d$type %in% c('slotblocked', 'outsideblocked')) & (d$region == region.name), ])
+      region.rebound.shot.xg.unblocked <- mean(d$rebound.shot.xg[(d$event == 'shot') & !(d$type %in% c('slotblocked', 'outsideblocked')) & (d$region == region.name)], na.rm = TRUE)
+      region.xgoal.unblocked <- mean(d$xgoal.unblocked[(d$event == 'shot') & (d$region == region.name)], na.rm = TRUE)
+      region.xgoal.unblocked.no.last <- mean(d$xgoal.unblocked.no.last[(d$event == 'shot') & (d$region == region.name)], na.rm = TRUE)
+      
+      regions$region.rebound.prob.unblocked[regions$region == region.name] <- region.rebound.prob.unblocked
+      regions$region.rebound.shot.prob.unblocked[regions$region == region.name] <- region.rebound.shot.prob.unblocked
+      regions$region.rebound.shot.xg.unblocked[regions$region == region.name] <- region.rebound.shot.xg.unblocked
+      regions$region.xgoal.unblocked[regions$region == region.name] <- region.xgoal.unblocked
+      regions$region.xgoal.unblocked.no.last[regions$region == region.name] <- region.xgoal.unblocked.no.last
+      
+      d$region.rebound.prob.unblocked[d$region == region.name] <- region.rebound.prob.unblocked
+      d$region.rebound.shot.prob.unblocked[d$region == region.name] <- region.rebound.shot.prob.unblocked
+      d$region.rebound.shot.xg.unblocked[d$region == region.name] <- region.rebound.shot.xg.unblocked
+      d$region.xgoal.unblocked[d$region == region.name] <- region.xgoal.unblocked
+      d$region.xgoal.unblocked.no.last[d$region == region.name] <- region.xgoal.unblocked.no.last
+      
+      region.shot.count.unblocked <- nrow(d[(d$event == 'shot') & !(d$type %in% c('slotblocked', 'outsideblocked')) & (d$region == region.name), ])
+      d$region.shot.count.unblocked[d$region == region.name] <- region.shot.count.unblocked
+      regions$region.shot.count.unblocked[regions$region == region.name] <- region.shot.count.unblocked
+    }
   }
   
-  regions$region.rebound.total <- regions$region.rebound.prob * regions$region.rebound.shot.prob * regions$region.rebound.shot.xg
-  d$region.rebound.total <- d$region.rebound.prob * d$region.rebound.shot.prob * d$region.rebound.shot.xg
+  if (!unblocked) {
+    regions$region.rebound.total <- regions$region.rebound.prob * regions$region.rebound.shot.prob * regions$region.rebound.shot.xg
+    d$region.rebound.total <- d$region.rebound.prob * d$region.rebound.shot.prob * d$region.rebound.shot.xg
+  } else {
+    regions$region.rebound.total.unblocked <- regions$region.rebound.prob.unblocked * regions$region.rebound.shot.prob.unblocked * regions$region.rebound.shot.xg.unblocked
+    d$region.rebound.total.unblocked <- d$region.rebound.prob.unblocked * d$region.rebound.shot.prob.unblocked * d$region.rebound.shot.xg.unblocked
+  }
   
   return(list(d = d, regions = regions))
 }

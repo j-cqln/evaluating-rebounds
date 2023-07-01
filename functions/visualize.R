@@ -3,150 +3,281 @@ library(gridExtra)
 library(pubtheme)
 
 # Plot rink regions with corresponding shot counts
-plot.regions <- function(d) {
+plot.regions <- function(d, unblocked = FALSE) {
   region.outline.color <- '#000000'
   background.color <- '#ffffff'
   gradient.low.color <- '#b0f0ce'
   gradient.high.color <- '#055229'
   
-  fill.label <- 'Shot attempts'
-  
-  regions.fill.limits <- c(250, 680)
-  regions.fill.breaks <- c(250, 680)
-  regions.fill.labels <- c('250', '680')
-  
-  regions.plot <- rink +
-    geom_polygon(data = d,
-                 aes(x = x, y = y,
-                     fill = region.shot.count,
-                     group = region),
-                 alpha = 0.6,
-                 size = 0.2,
-                 color = region.outline.color,
-                 show.legend = TRUE) +
-    scale_fill_gradient(low = gradient.low.color, high = gradient.high.color, na.value = NA,
-                        limits = regions.fill.limits,
-                        breaks = regions.fill.breaks,
-                        labels = regions.fill.labels,
-                        oob = squish) +
-    labs(title = 'Rink regions',
-         subtitle = 'Data plotted by region in all location visualizations',
-         caption = 'Created by github.com/j-cqln',
-         fill = fill.label) +
-    ylim(c(-100.1, -24)) +
-    xlim(c(-42.6, 42.6)) +
-    theme_pub(type = 'map', base_size = 36/3) +
-    theme(plot.background = element_rect(fill = background.color),
-          panel.background = element_rect(fill = background.color),
-          legend.background = element_rect(fill = background.color),
-          legend.position = 'top',
-          legend.box = 'horizontal',
-          legend.box.just = 'left',
-          legend.box.margin = margin(t = 0, r = 0, b = 0, l = 0, unit = 'pt'),
-          legend.direction = 'horizontal',
-          legend.justification = c(0, 0),
-          legend.margin = margin(t = 0, r = 20, b = 0, l = 0, unit = 'pt')) +
-    guides(fill = guide_colorbar(order = 2,
-                                 title.position = 'top',
-                                 title.hjust = 0))
+  if (!unblocked) {
+    fill.label <- 'Shot attempts'
+    
+    regions.fill.limits <- c(250, 680)
+    regions.fill.breaks <- c(250, 680)
+    regions.fill.labels <- c('250', '680')
+    
+    regions.plot <- rink +
+      geom_polygon(data = d,
+                   aes(x = x, y = y,
+                       fill = region.shot.count,
+                       group = region),
+                   alpha = 0.6,
+                   size = 0.2,
+                   color = region.outline.color,
+                   show.legend = TRUE) +
+      scale_fill_gradient(low = gradient.low.color, high = gradient.high.color, na.value = NA,
+                          limits = regions.fill.limits,
+                          breaks = regions.fill.breaks,
+                          labels = regions.fill.labels,
+                          oob = squish) +
+      labs(title = 'Rink regions',
+           subtitle = 'Data plotted by region in all location visualizations',
+           caption = 'Created by github.com/j-cqln',
+           fill = fill.label) +
+      ylim(c(-100.1, -24)) +
+      xlim(c(-42.6, 42.6)) +
+      theme_pub(type = 'map', base_size = 36/3) +
+      theme(plot.background = element_rect(fill = background.color),
+            panel.background = element_rect(fill = background.color),
+            legend.background = element_rect(fill = background.color),
+            legend.position = 'top',
+            legend.box = 'horizontal',
+            legend.box.just = 'left',
+            legend.box.margin = margin(t = 0, r = 0, b = 0, l = 0, unit = 'pt'),
+            legend.direction = 'horizontal',
+            legend.justification = c(0, 0),
+            legend.margin = margin(t = 0, r = 20, b = 0, l = 0, unit = 'pt')) +
+      guides(fill = guide_colorbar(order = 2,
+                                   title.position = 'top',
+                                   title.hjust = 0))
+  } else {
+    fill.label <- 'Unblocked shot attempts'
+    
+    regions.fill.limits <- c(150, 660)
+    regions.fill.breaks <- c(150, 650)
+    regions.fill.labels <- c('150', '650')
+    
+    regions.plot <- rink +
+      geom_polygon(data = d,
+                   aes(x = x, y = y,
+                       fill = region.shot.count.unblocked,
+                       group = region),
+                   alpha = 0.6,
+                   size = 0.2,
+                   color = region.outline.color,
+                   show.legend = TRUE) +
+      scale_fill_gradient(low = gradient.low.color, high = gradient.high.color, na.value = NA,
+                          limits = regions.fill.limits,
+                          breaks = regions.fill.breaks,
+                          labels = regions.fill.labels,
+                          oob = squish) +
+      labs(title = 'Rink regions',
+           subtitle = 'Data plotted by region in all location visualizations',
+           caption = 'Created by github.com/j-cqln',
+           fill = fill.label) +
+      ylim(c(-100.1, -24)) +
+      xlim(c(-42.6, 42.6)) +
+      theme_pub(type = 'map', base_size = 36/3) +
+      theme(plot.background = element_rect(fill = background.color),
+            panel.background = element_rect(fill = background.color),
+            legend.background = element_rect(fill = background.color),
+            legend.position = 'top',
+            legend.box = 'horizontal',
+            legend.box.just = 'left',
+            legend.box.margin = margin(t = 0, r = 0, b = 0, l = 0, unit = 'pt'),
+            legend.direction = 'horizontal',
+            legend.justification = c(0, 0),
+            legend.margin = margin(t = 0, r = 20, b = 0, l = 0, unit = 'pt')) +
+      guides(fill = guide_colorbar(order = 2,
+                                   title.position = 'top',
+                                   title.hjust = 0))
+  }
   
   return(regions.plot)
 }
 
 # Plot average xG by region
-plot.xg <- function(d) {
+plot.xg <- function(d, unblocked = FALSE) {
   region.outline.color <- '#000000'
   background.color <- '#ffffff'
   gradient.low.color <- '#b0f0ce'
   gradient.high.color <- '#055229'
   
-  fill.label <- 'xG'
-  
-  regions.fill.limits <- c(0.014, 0.15)
-  regions.fill.breaks <- c(0.015, 0.15)
-  regions.fill.labels <- c('0.015', '0.15')
-  
-  xg.plot <- rink +
-    geom_polygon(data = d,
-                 aes(x = x, y = y,
-                     fill = region.xgoal.all,
-                     group = region),
-                 alpha = 0.6,
-                 size = 0.2,
-                 color = region.outline.color,
-                 show.legend = TRUE) +
-    scale_fill_gradient(low = gradient.low.color, high = gradient.high.color, na.value = NA,
-                        limits = regions.fill.limits,
-                        breaks = regions.fill.breaks,
-                        labels = regions.fill.labels,
-                        oob = squish) +
-    labs(title = 'xG',
-         subtitle = 'Expected goals, model trained on all shot attempts',
-         caption = 'Created by github.com/j-cqln',
-         fill = fill.label) +
-    ylim(c(-100.1, -24)) +
-    xlim(c(-42.6, 42.6)) +
-    theme_pub(type = 'map', base_size = 36/3) +
-    theme(plot.background = element_rect(fill = background.color),
-          panel.background = element_rect(fill = background.color),
-          legend.background = element_rect(fill = background.color),
-          legend.position = 'top',
-          legend.box = 'horizontal',
-          legend.box.just = 'left',
-          legend.box.margin = margin(t = 0, r = 0, b = 0, l = 0, unit = 'pt'),
-          legend.direction = 'horizontal',
-          legend.justification = c(0, 0),
-          legend.margin = margin(t = 0, r = 20, b = 0, l = 0, unit = 'pt')) +
-    guides(fill = guide_colorbar(order = 2,
-                                 title.position = 'top',
-                                 title.hjust = 0))
+  if (!unblocked) {
+    title <- 'xG, all shot attempts'
+    subtitle <- 'Expected goals, model trained on all shot attempts'
+    fill.label <- 'xG'
+    
+    regions.fill.limits <- c(0.014, 0.16)
+    regions.fill.breaks <- c(0.015, 0.15)
+    regions.fill.labels <- c('0.015', '0.15')
+    
+    xg.plot <- rink +
+      geom_polygon(data = d,
+                   aes(x = x, y = y,
+                       fill = region.xgoal.all,
+                       group = region),
+                   alpha = 0.6,
+                   size = 0.2,
+                   color = region.outline.color,
+                   show.legend = TRUE) +
+      scale_fill_gradient(low = gradient.low.color, high = gradient.high.color, na.value = NA,
+                          limits = regions.fill.limits,
+                          breaks = regions.fill.breaks,
+                          labels = regions.fill.labels,
+                          oob = squish) +
+      labs(title = title,
+           subtitle = subtitle,
+           caption = 'Created by github.com/j-cqln',
+           fill = fill.label) +
+      ylim(c(-100.1, -24)) +
+      xlim(c(-42.6, 42.6)) +
+      theme_pub(type = 'map', base_size = 36/3) +
+      theme(plot.background = element_rect(fill = background.color),
+            panel.background = element_rect(fill = background.color),
+            legend.background = element_rect(fill = background.color),
+            legend.position = 'top',
+            legend.box = 'horizontal',
+            legend.box.just = 'left',
+            legend.box.margin = margin(t = 0, r = 0, b = 0, l = 0, unit = 'pt'),
+            legend.direction = 'horizontal',
+            legend.justification = c(0, 0),
+            legend.margin = margin(t = 0, r = 20, b = 0, l = 0, unit = 'pt')) +
+      guides(fill = guide_colorbar(order = 2,
+                                   title.position = 'top',
+                                   title.hjust = 0))
+  } else {
+    title <- 'xG, unblocked shot attempts'
+    subtitle <- 'Expected goals, model trained on unblocked shots'
+    fill.label <- 'xG'
+    
+    regions.fill.limits <- c(0.014, 0.16)
+    regions.fill.breaks <- c(0.015, 0.15)
+    regions.fill.labels <- c('0.015', '0.15')
+    
+    xg.plot <- rink +
+      geom_polygon(data = d,
+                   aes(x = x, y = y,
+                       fill = region.xgoal.unblocked,
+                       group = region),
+                   alpha = 0.6,
+                   size = 0.2,
+                   color = region.outline.color,
+                   show.legend = TRUE) +
+      scale_fill_gradient(low = gradient.low.color, high = gradient.high.color, na.value = NA,
+                          limits = regions.fill.limits,
+                          breaks = regions.fill.breaks,
+                          labels = regions.fill.labels,
+                          oob = squish) +
+      labs(title = title,
+           subtitle = subtitle,
+           caption = 'Created by github.com/j-cqln',
+           fill = fill.label) +
+      ylim(c(-100.1, -24)) +
+      xlim(c(-42.6, 42.6)) +
+      theme_pub(type = 'map', base_size = 36/3) +
+      theme(plot.background = element_rect(fill = background.color),
+            panel.background = element_rect(fill = background.color),
+            legend.background = element_rect(fill = background.color),
+            legend.position = 'top',
+            legend.box = 'horizontal',
+            legend.box.just = 'left',
+            legend.box.margin = margin(t = 0, r = 0, b = 0, l = 0, unit = 'pt'),
+            legend.direction = 'horizontal',
+            legend.justification = c(0, 0),
+            legend.margin = margin(t = 0, r = 20, b = 0, l = 0, unit = 'pt')) +
+      guides(fill = guide_colorbar(order = 2,
+                                   title.position = 'top',
+                                   title.hjust = 0))
+  }
   
   return(xg.plot)
 }
 
 # Plot rebound value
-plot.rebounds1 <- function(d) {
+plot.rebounds1 <- function(d, unblocked = FALSE) {
   background.color <- '#ffffff'
   gradient.low.color <- '#bedceb'
   gradient.high.color <- '#004b71'
-
-  size.label <- 'Shot attempts'
   
-  # 1
-  rebounds.plot.fill.limits <- c(0.2, 0.45)
-  rebounds.plot.fill.breaks <- c(0.25, 0.45)
-  rebounds.plot.fill.labels <- c('0.25', '0.45')
-  
-  rebounds.plot.size.limits <- c(0, 45)
-  rebounds.plot.size.breaks <- c(5, 20, 35)
-  rebounds.plot.size.labels <- c('5', '20', '35+')
-  
-  # 2
-  rebound.shots.plot.fill.limits <- c(0.015, 0.075)
-  rebound.shots.plot.fill.breaks <- c(0.015, 0.075)
-  rebound.shots.plot.fill.labels <- c('0.015', '0.075')
-  
-  rebound.shots.plot.size.limits <- c(0, 15)
-  rebound.shots.plot.size.breaks <- c(5, 10, 15)
-  rebound.shots.plot.size.labels <- c('5', '10', '15+')
-  
-  # 3
-  xg.plot.fill.limits <- c(0.08, 0.18)
-  xg.plot.fill.breaks <- c(0.08, 0.18)
-  xg.plot.fill.labels <- c('0.08', '0.18')
-  
-  xg.plot.size.limits <- c(0, 6)
-  xg.plot.size.breaks <- c(1, 3, 5)
-  xg.plot.size.labels <- c('1', '3', '5+')
-  
-  # 4
-  rebounds.total.plot.fill.limits <- c(0.0005, 0.006)
-  rebounds.total.plot.fill.breaks <- c(0.0005, 0.005)
-  rebounds.total.plot.fill.labels <- c('0.0005', '0.005')
-  
-  rebounds.total.plot.size.limits <- c(0, 45)
-  rebounds.total.plot.size.breaks <- c(5, 20, 35)
-  rebounds.total.plot.size.labels <- c('5', '20', '35+')
+  if (!unblocked) {
+    size.label <- 'Shot attempts'
+    
+    # 1
+    rebounds.plot.fill.limits <- c(0.2, 0.45)
+    rebounds.plot.fill.breaks <- c(0.25, 0.45)
+    rebounds.plot.fill.labels <- c('0.25', '0.45')
+    
+    rebounds.plot.size.limits <- c(0, 45)
+    rebounds.plot.size.breaks <- c(5, 20, 35)
+    rebounds.plot.size.labels <- c('5', '20', '35+')
+    
+    # 2
+    rebound.shots.plot.fill.limits <- c(0.015, 0.075)
+    rebound.shots.plot.fill.breaks <- c(0.015, 0.075)
+    rebound.shots.plot.fill.labels <- c('0.015', '0.075')
+    
+    rebound.shots.plot.size.limits <- c(0, 15)
+    rebound.shots.plot.size.breaks <- c(5, 10, 15)
+    rebound.shots.plot.size.labels <- c('5', '10', '15+')
+    
+    # 3
+    xg.plot.fill.limits <- c(0.08, 0.18)
+    xg.plot.fill.breaks <- c(0.08, 0.18)
+    xg.plot.fill.labels <- c('0.08', '0.18')
+    
+    xg.plot.size.limits <- c(0, 6)
+    xg.plot.size.breaks <- c(1, 3, 5)
+    xg.plot.size.labels <- c('1', '3', '5+')
+    
+    # 4
+    rebounds.total.plot.fill.limits <- c(0.0005, 0.006)
+    rebounds.total.plot.fill.breaks <- c(0.0005, 0.005)
+    rebounds.total.plot.fill.labels <- c('0.0005', '0.005')
+    
+    rebounds.total.plot.size.limits <- c(0, 45)
+    rebounds.total.plot.size.breaks <- c(5, 20, 35)
+    rebounds.total.plot.size.labels <- c('5', '20', '35+')
+    
+  } else {
+    size.label <- 'Unblocked shot attempts'
+    
+    # 1
+    rebounds.plot.fill.limits <- c(0.35, 0.55)
+    rebounds.plot.fill.breaks <- c(0.35, 0.55)
+    rebounds.plot.fill.labels <- c('0.35', '0.55')
+    
+    rebounds.plot.size.limits <- c(0, 45)
+    rebounds.plot.size.breaks <- c(5, 20, 35)
+    rebounds.plot.size.labels <- c('5', '20', '35+')
+    
+    # 2
+    rebound.shots.plot.fill.limits <- c(0.03, 0.08)
+    rebound.shots.plot.fill.breaks <- c(0.03, 0.08)
+    rebound.shots.plot.fill.labels <- c('0.03', '0.08')
+    
+    rebound.shots.plot.size.limits <- c(0, 15)
+    rebound.shots.plot.size.breaks <- c(5, 10, 15)
+    rebound.shots.plot.size.labels <- c('5', '10', '15+')
+    
+    # 3
+    xg.plot.fill.limits <- c(0.08, 0.18)
+    xg.plot.fill.breaks <- c(0.08, 0.18)
+    xg.plot.fill.labels <- c('0.08', '0.18')
+    
+    xg.plot.size.limits <- c(0, 6)
+    xg.plot.size.breaks <- c(1, 3, 5)
+    xg.plot.size.labels <- c('1', '3', '5+')
+    
+    # 4
+    rebounds.total.plot.fill.limits <- c(0.001, 0.007)
+    rebounds.total.plot.fill.breaks <- c(0.001, 0.006)
+    rebounds.total.plot.fill.labels <- c('0.001', '0.006')
+    
+    rebounds.total.plot.size.limits <- c(0, 45)
+    rebounds.total.plot.size.breaks <- c(5, 20, 35)
+    rebounds.total.plot.size.labels <- c('5', '20', '35+')
+  }
   
   # 1
   shots <- get.shots(d)
@@ -159,7 +290,7 @@ plot.rebounds1 <- function(d) {
   shots <- shots %>%
     group_by(cell) %>%
     summarise(shot.count = n(),
-              rebound.prob.plot = mean(region.rebound.prob)) %>%
+              rebound.prob.plot = ifelse(unblocked, mean(region.rebound.prob.unblocked), mean(region.rebound.prob))) %>%
     ungroup() %>%
     right_join(shots.hexbin.df, by = 'cell') %>%
     select(cell, x, y, count, shot.count, rebound.prob.plot)
@@ -218,7 +349,7 @@ plot.rebounds1 <- function(d) {
   rebounds <- rebounds %>%
     group_by(cell) %>%
     summarise(shot.count = n(),
-              rebound.shot.prob.plot = mean(region.rebound.shot.prob)) %>%
+              rebound.shot.prob.plot = ifelse(unblocked, mean(region.rebound.shot.prob.unblocked), mean(region.rebound.shot.prob))) %>%
     ungroup() %>%
     right_join(rebounds.hexbin.df, by = 'cell') %>%
     select(cell, x, y, count, shot.count, rebound.shot.prob.plot)
@@ -277,7 +408,7 @@ plot.rebounds1 <- function(d) {
   rebound.shots <- rebound.shots %>%
     group_by(cell) %>%
     summarise(shot.count = n(),
-              xg.plot = mean(region.rebound.shot.xg)) %>%
+              xg.plot = ifelse(unblocked, mean(region.rebound.shot.xg.unblocked), mean(region.rebound.shot.xg))) %>%
     ungroup() %>%
     right_join(rebound.shots.hexbin.df, by = 'cell') %>%
     select(cell, x, y, count, shot.count, xg.plot)
@@ -336,7 +467,7 @@ plot.rebounds1 <- function(d) {
   rebounds.total <- rebounds.total %>%
     group_by(cell) %>%
     summarise(shot.count = n(),
-              rebounds.total.plot = mean(region.rebound.total)) %>%
+              rebounds.total.plot = ifelse(unblocked, mean(region.rebound.total.unblocked), mean(region.rebound.total))) %>%
     ungroup() %>%
     right_join(rebounds.total.hexbin.df, by = 'cell') %>%
     select(cell, x, y, count, shot.count, rebounds.total.plot)
@@ -393,50 +524,92 @@ plot.rebounds1 <- function(d) {
 }
 
 # Plot xG* and xG comparison
-plot.rebounds2 <- function(d) {
+plot.rebounds2 <- function(d, unblocked = FALSE) {
   background.color <- '#ffffff'
   gradient.low.color <- '#bedceb'
   gradient.high.color <- '#004b71'
   diff.gradient.low.color <- '#3597c9'
+  diff.gradient.mid.color <- '#d6d6d6'
   diff.gradient.high.color <- '#c8213e'
   
-  size.label <- 'Shot attempts'
-  
-  # 1
-  xg.no.last.plot.fill.limits <- c(0.013, 0.15)
-  xg.no.last.plot.fill.breaks <- c(0.015, 0.15)
-  xg.no.last.plot.fill.labels <- c('0.015', '0.15')
-  
-  xg.no.last.plot.size.limits <- c(0, 45)
-  xg.no.last.plot.size.breaks <- c(5, 20, 35)
-  xg.no.last.plot.size.labels <- c('5', '20', '35+')
-  
-  # 2
-  rebounds.total.plot.fill.limits <- c(0.0005, 0.006)
-  rebounds.total.plot.fill.breaks <- c(0.0005, 0.005)
-  rebounds.total.plot.fill.labels <- c('0.0005', '0.005')
-  
-  rebounds.total.plot.size.limits <- c(0, 45)
-  rebounds.total.plot.size.breaks <- c(5, 20, 35)
-  rebounds.total.plot.size.labels <- c('5', '20', '35+')
-  
-  # 3
-  sum.plot.fill.limits <- c(0.014, 0.16)
-  sum.plot.fill.breaks <- c(0.015, 0.15)
-  sum.plot.fill.labels <- c('0.015', '0.15')
-  
-  sum.plot.size.limits <- c(0, 45)
-  sum.plot.size.breaks <- c(5, 20, 35)
-  sum.plot.size.labels <- c('5', '20', '35+')
-  
-  # 4
-  diff.plot.fill.limits <- c(-0.005, 0.006)
-  diff.plot.fill.breaks <- c(-0.005, 0.005)
-  diff.plot.fill.labels <- c('-0.005', '0.005')
-  
-  diff.plot.size.limits <- c(0, 45)
-  diff.plot.size.breaks <- c(5, 20, 35)
-  diff.plot.size.labels <- c('5', '20', '35+')
+  if (!unblocked) {
+    size.label <- 'Shot attempts'
+    
+    # 1
+    xg.no.last.plot.fill.limits <- c(0.013, 0.15)
+    xg.no.last.plot.fill.breaks <- c(0.015, 0.15)
+    xg.no.last.plot.fill.labels <- c('0.015', '0.15')
+    
+    xg.no.last.plot.size.limits <- c(0, 45)
+    xg.no.last.plot.size.breaks <- c(5, 20, 35)
+    xg.no.last.plot.size.labels <- c('5', '20', '35+')
+    
+    # 2
+    rebounds.total.plot.fill.limits <- c(0.0005, 0.006)
+    rebounds.total.plot.fill.breaks <- c(0.0005, 0.005)
+    rebounds.total.plot.fill.labels <- c('0.0005', '0.005')
+    
+    rebounds.total.plot.size.limits <- c(0, 45)
+    rebounds.total.plot.size.breaks <- c(5, 20, 35)
+    rebounds.total.plot.size.labels <- c('5', '20', '35+')
+    
+    # 3
+    sum.plot.fill.limits <- c(0.014, 0.16)
+    sum.plot.fill.breaks <- c(0.015, 0.15)
+    sum.plot.fill.labels <- c('0.015', '0.15')
+    
+    sum.plot.size.limits <- c(0, 45)
+    sum.plot.size.breaks <- c(5, 20, 35)
+    sum.plot.size.labels <- c('5', '20', '35+')
+    
+    # 4
+    diff.plot.fill.limits <- c(-0.006, 0.006)
+    diff.plot.fill.breaks <- c(-0.006, 0.006)
+    diff.plot.fill.labels <- c('-0.006', '0.006')
+    
+    diff.plot.size.limits <- c(0, 45)
+    diff.plot.size.breaks <- c(5, 20, 35)
+    diff.plot.size.labels <- c('5', '20', '35+')
+    
+  } else {
+    size.label <- 'Unblocked shot attempts'
+    
+    # 1
+    xg.no.last.plot.fill.limits <- c(0.018, 0.16)
+    xg.no.last.plot.fill.breaks <- c(0.018, 0.15)
+    xg.no.last.plot.fill.labels <- c('0.018', '0.15')
+    
+    xg.no.last.plot.size.limits <- c(0, 45)
+    xg.no.last.plot.size.breaks <- c(5, 20, 35)
+    xg.no.last.plot.size.labels <- c('5', '20', '35+')
+    
+    # 2
+    rebounds.total.plot.fill.limits <- c(0.001, 0.007)
+    rebounds.total.plot.fill.breaks <- c(0.001, 0.006)
+    rebounds.total.plot.fill.labels <- c('0.001', '0.006')
+    
+    rebounds.total.plot.size.limits <- c(0, 45)
+    rebounds.total.plot.size.breaks <- c(5, 20, 35)
+    rebounds.total.plot.size.labels <- c('5', '20', '35+')
+    
+    # 3
+    sum.plot.fill.limits <- c(0.02, 0.16)
+    sum.plot.fill.breaks <- c(0.02, 0.15)
+    sum.plot.fill.labels <- c('0.02', '0.15')
+    
+    sum.plot.size.limits <- c(0, 45)
+    sum.plot.size.breaks <- c(5, 20, 35)
+    sum.plot.size.labels <- c('5', '20', '35+')
+    
+    # 4
+    diff.plot.fill.limits <- c(-0.006, 0.006)
+    diff.plot.fill.breaks <- c(-0.006, 0.006)
+    diff.plot.fill.labels <- c('-0.006', '0.006')
+    
+    diff.plot.size.limits <- c(0, 45)
+    diff.plot.size.breaks <- c(5, 20, 35)
+    diff.plot.size.labels <- c('5', '20', '35+')
+  }
   
   shots <- get.shots(d)
   shots.hexbin <- hexbin::hexbin(shots$x, shots$y, xbins = 21, IDs = TRUE)
@@ -448,10 +621,18 @@ plot.rebounds2 <- function(d) {
   shots <- shots %>%
     group_by(cell) %>%
     summarise(shot.count = n(),
-              xg.no.last.plot = mean(region.xgoal.all.no.last),
-              rebounds.total.plot = mean(region.rebound.total),
-              sum.plot = mean(region.xgoal.all.no.last) + mean(region.rebound.total),
-              diff.plot = mean(region.xgoal.all.no.last) + mean(region.rebound.total) - mean(region.xgoal.all)) %>%
+              xg.no.last.plot = ifelse(unblocked,
+                                       mean(region.xgoal.unblocked.no.last),
+                                       mean(region.xgoal.all.no.last)),
+              rebounds.total.plot = ifelse(unblocked,
+                                           mean(region.rebound.total.unblocked),
+                                           mean(region.rebound.total)),
+              sum.plot = ifelse(unblocked,
+                                mean(region.xgoal.unblocked.no.last) + mean(region.rebound.total.unblocked),
+                                mean(region.xgoal.all.no.last) + mean(region.rebound.total)),
+              diff.plot = ifelse(unblocked,
+                                 mean(region.xgoal.unblocked.no.last) + mean(region.rebound.total.unblocked) - mean(region.xgoal.unblocked),
+                                 mean(region.xgoal.all.no.last) + mean(region.rebound.total) - mean(region.xgoal.all))) %>%
     ungroup() %>%
     right_join(shots.hexbin.df, by = 'cell') %>%
     select(cell, x, y, count, shot.count, xg.no.last.plot, rebounds.total.plot, sum.plot, diff.plot)
@@ -597,10 +778,13 @@ plot.rebounds2 <- function(d) {
               color = NA,
               starshape = 'hexagon',
               show.legend = TRUE) +
-    scale_fill_gradient(low = diff.gradient.low.color, high = diff.gradient.high.color, na.value = NA,
-                        limits = diff.plot.fill.limits,
-                        breaks = diff.plot.fill.breaks,
-                        labels = diff.plot.fill.labels) +
+    scale_fill_gradient2(low = diff.gradient.low.color,
+                         mid = diff.gradient.mid.color,
+                         high = diff.gradient.high.color,
+                         na.value = NA,
+                         limits = diff.plot.fill.limits,
+                         breaks = diff.plot.fill.breaks,
+                         labels = diff.plot.fill.labels) +
     scale_size_area(limits = diff.plot.size.limits,
                     breaks = diff.plot.size.breaks,
                     labels = diff.plot.size.labels,
