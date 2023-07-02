@@ -11,9 +11,13 @@ ui <- dashboardPage(
                menuSubItem('PWHPA, unblocked shots', tabName = 'reboundsUnblocked'),
                menuSubItem('NHL, unblocked shots', tabName = 'reboundsUnblockedNHL')),
       
-      menuItem('Work in progress',
-               tabName = 'othertab',
+      menuItem('Passes & zone entries',
+               tabName = 'passesZoneEntries',
                icon = icon('route')),
+      
+      menuItem('Summary',
+               tabName = 'summary',
+               icon = icon('paperclip')),
       
       menuItem('Source code & info',
                tabName = 'info',
@@ -87,11 +91,11 @@ ui <- dashboardPage(
                       br(),
                       'It is possible that this may be an effect of the the small 
                     sample size, but it could also be that slot shots are more 
-                    valuable due to many of them being rebound shots 
-                    (and xG is not aware of rebound shot probabilities). By 
-                      comparing with NHL data, a larger dataset, we notice 
-                      that the effect is reversed, suggesting this is due to 
-                      the sample size. See the NHL rebounds tab for more.',
+                    valuable due to many of them being rebound shots (and xG 
+                    is not aware of rebound shot probabilities). By comparing 
+                    with a larger dataset of NHL shots, we notice that the 
+                    effect is reversed, suggesting this may be due to the 
+                      sample size or difference in rebound shot definition.',
                       br(),
                       br(),
                       'Average xG values per region from the model with previous 
@@ -120,22 +124,21 @@ ui <- dashboardPage(
       # Rebounds PWHPA unblocked shots tab
       tabItem(tabName = 'reboundsUnblocked',
               fluidRow(
-                box(title = 'Rebound value and xG* vs xG comparison, unblocked shots',
-                    p('Modeling and plotting is done for unblocked shots, 
-                    analogous to for all shot attempts.',
+                box(title = 'Rebound value, xG* vs xG, unblocked shots',
+                    p('Modeling and visualization done analogously using 
+                      PWHPA unblocked shots.',
                       br(),
                       br(),
-                      'Notable observations include that xG* values all non-slot 
-                      shots more than regular xG. This could be attributed to 
-                      the smaller sample size, or the fact that the xG model 
-                      is unaware of contribution from subsequent shots, but 
-                      does value slot shots more  due to them more often being 
-                      rebound shots.',
+                      'Notably, the xG* model values all non-slot shots more 
+                      than regular xG. This could be attributed to the smaller 
+                      sample size, or the fact that the xG model is unaware of 
+                      contribution from subsequent shots, but does value slot 
+                      shots more due to them more often being rebound shots.',
                       br(),
                       br(),
                       'By comparing with NHL data, a larger dataset, we notice 
                       that the effect is reversed, suggesting this is due to 
-                      the sample size. See the NHL rebounds tab for more.',
+                      sample size and differences in rebound definition.',
                       style = 'font-size:16px;margin:5px;'),
                     width = 4,
                     status = 'primary',
@@ -174,29 +177,42 @@ ui <- dashboardPage(
       # Rebounds NHL unblocked shots tab
       tabItem(tabName = 'reboundsUnblockedNHL',
               fluidRow(
-                box(title = 'Rebound value and xG* vs xG comparison, NHL unblocked shots',
-                    p('Modeling and plotting is done for unblocked shots from 
-                    the 2022-2023 NHL season, analogous to for PWHPA all shot 
-                    attempts. This is a larger dataset, with over 122000 
-                      unblocked shots.',
+                box(title = 'Rebound value, xG* vs xG, NHL',
+                    p('Modeling and visualization done analogously using 
+                    unblocked shots from the 2022-2023 NHL season, a larger 
+                    dataset. Rebounds are not separately defined from rebound 
+                    shots, so rebound probabilities cannot be plotted.',
                       br(),
                       br(),
-                      'Rebounds are not distinguished from rebound shots, so 
-                      rebound probabilities cannot be plotted.',
-                      br(),
-                      br(),
-                      'We observe that xG* has higher values than xG across 
-                      all regions, but particularly for slot shots. This fits 
+                      'We observe that xG* is higher than xG across all 
+                      regions, but particularly for slot shots. This fits 
                       the theory that slot shots should create more value due 
-                      to higher rebound potential. The results in the model 
-                      difference plot here suggest the trend shown in the 
-                      PWHPA model difference plots could be an effect of 
-                      sample size.',
+                      to higher rebound potential. This suggests that the 
+                      difference in trends shown in PWHPA and NHL model 
+                      comparison plots may be an effect of sample size and 
+                      rebound definition.',
+                      br(),
+                      br(),
+                      'The difference between PWHPA and NHL data when comparing 
+                      xG* and xG may be due to PWHPA P(rebound shot | rebound) 
+                      being 0.015-0.075, while NHL P(rebound shot) is 0.05-0.10. 
+                      Compounding on the probability difference, the NHL data 
+                      has a less strict rebound shot definition as rebounds are 
+                      not separately defined. This makes all NHL shots more 
+                      valuable in terms of xG* than xG. For PWHPA data, the 
+                      lower rebound shot probability means original shots get 
+                      less credit for generating rebound value. However, when 
+                      rebounds do occur, they are still valuable, so removing 
+                      the previous event has roughly similar negative impact as 
+                      that for NHL data. Since rebound value has less positive 
+                      impact, the net effect is negative, particularly for the 
+                      inner slot, the highest rebound value region.',
                       style = 'font-size:16px;margin:5px;'),
-                    width = 4,
+                    width = 8,
                     status = 'primary',
-                    solidHeader = TRUE),
-                
+                    solidHeader = TRUE)),
+              
+              fluidRow(
                 box(splitLayout(cellWidths = c('100%'),
                                 uiOutput('regions_unblocked_nhl')),
                     width = 4,
@@ -213,7 +229,7 @@ ui <- dashboardPage(
               fluidRow(
                 box(splitLayout(cellWidths = c('100%'),
                                 uiOutput('rebounds1_unblocked_nhl')),
-                    width = 12,
+                    width = 10,
                     status = 'primary',
                     solidHeader = TRUE)
               ),
@@ -227,16 +243,100 @@ ui <- dashboardPage(
               )
       ),
       
-      # Other tab
-      tabItem(tabName = 'othertab',
+      # Passes & zone entries tab
+      tabItem(tabName = 'passesZoneEntries',
               fluidRow(
-                box(title = 'Work in progress...',
-                    p('Coming soon!', style = 'font-size:16px;margin:5px;'),
+                box(title = 'Passes by subsequent shot xG',
+                    p('Passes directly leading to low danger shots largely 
+                    originate from regions far from the slot, while passes 
+                      directly leading to high danger shots tend to originate 
+                      from near the goal line. Passes from closer to the net 
+                      lead to more dangerous shots.',
+                      br(),
+                      br(),
+                      'Overall, passes originate from regions other than the 
+                      slot, likely due to players shooting more in the slot 
+                      as opposed to passing.',
+                      br(),
+                      br(),
+                      'High danger refers to shot attempts in the top 20% in 
+                      terms of xG, while low danger refers to the bottom 80%.',
+                      style = 'font-size:16px;margin:5px;'),
                     width = 4,
+                    status = 'primary',
+                    solidHeader = TRUE),
+                
+                box(splitLayout(cellWidths = c('100%'),
+                                uiOutput('passes')),
+                    width = 8,
+                    status = 'primary',
+                    solidHeader = TRUE)
+              ),
+              
+              fluidRow(
+                box(title = 'Offensive zone entries',
+                    p('Successful controlled entries into the offensive zone 
+                      are noticeably concentrated at the two point areas.',
+                      br(),
+                      br(),
+                      'Looking at this data at a player level per 60 minutes 
+                      of play, we can see that all 20 of the top players 
+                      are forwards, with Victoria Bach the most effective 
+                      at contributing successful offensive zone entries.',
+                      style = 'font-size:16px;margin:5px;'),
+                    width = 4,
+                    status = 'primary',
+                    solidHeader = TRUE),
+                
+                box(splitLayout(cellWidths = c('100%'),
+                                uiOutput('ozone_entries')),
+                    width = 8,
                     status = 'primary',
                     solidHeader = TRUE)
               )
       ),
+      
+      # Summary
+      tabItem(tabName = 'summary',
+              fluidRow(
+                box(title = 'Summary',
+                    p('Rebound value modeling shows that shots from the inner 
+                    slot are better in terms of xG and the value of the rebound 
+                    generated. A modified form of xG using rebound value 
+                    accounting can then be compared to regular xG to examine 
+                    their difference the largest difference occurring in the 
+                    inner slot region where more frequent and higher value 
+                    rebounds occur. The result of this model comparison is 
+                    also examined through comparing trends in PWHPA and other 
+                    data.',
+                      br(),
+                      br(),
+                      'Visualizing the location of passes leading directly to 
+                    shot attempts shows that passes leading to high danger 
+                    shots in terms of xG primarily originate from near the 
+                    goal line, while those leading to low danger shots 
+                    primarily originate from the point. Overall, these passes 
+                    originate from regions outside the slot (where players are 
+                    more likely to shoot).',
+                      br(),
+                      br(),
+                      'Visualizing successful offensive zone entry locations 
+                    show that they are concentrated near the point as opposed 
+                    to center ice.',
+                      br(),
+                      br(),
+                      'Forwards, reasonably, are ranked high in both high danger 
+                    passes and successful offensive zone entries, reasonably, 
+                    with only 2 defensemen in the top 20 for high danger 
+                    passes, and no defensemen in the top 20 for successful 
+                    entries.',
+                      br(),
+                      br(),
+                      'Data cleaning and visualization were done using R.',
+                      style = 'font-size:16px;margin:5px;'),
+                    width = 8,
+                    status = 'primary',
+                    solidHeader = TRUE))),
       
       # Source code & info tab
       tabItem(tabName = 'info',
@@ -259,43 +359,43 @@ ui <- dashboardPage(
                       br(),
                       br(),
                       'Women\'s hockey data from Viz Launchpad, WHKYHAC + 
-                    Sportlogiq. NHL shot data from MoneyPuck.com.',
+                    Sportlogiq.',
+                      br(),
+                      br(),
+                      'NHL shot data from MoneyPuck.com.',
                       style = 'font-size:16px;margin:5px;'),
                     width = 4,
                     status = 'primary',
                     solidHeader = TRUE),
                 
-                tabBox(
-                  title = 'Definitions of terms', side = 'left',
-                  # input$definitionTab to find current tab
-                  id = 'definitionTab',
-                  tabPanel('Rebounds',
-                           p('xG: ',
-                             br(),
-                             'Expected goals model taking into account 
+                box(
+                  title = 'Definitions of terms',
+                  p('xG: ',
+                    br(),
+                    'Expected goals model taking into account 
                              distance, angle, goal differential, previous 
                              event, shot type, shooter and goalie involved',
-                             br(),
-                             br(),
-                             'Isolated xG: ',
-                             br(),
-                             'xG without previous event',
-                             br(),
-                             br(),
-                             'Rebound value: ',
-                             br(),
-                             'Probability-weighted xG of 
+                    br(),
+                    br(),
+                    'Isolated xG: ',
+                    br(),
+                    'xG without previous event',
+                    br(),
+                    br(),
+                    'Rebound value: ',
+                    br(),
+                    'Probability-weighted xG of 
                              rebound shots; this value is assigned to 
                              the original shot',
-                             br(),
-                             br(),
-                             'xG*: ',
-                             br(),
-                             'Isolated xG with rebound value added',
-                             style = 'font-size:16px;margin:5px;')),
-                  tabPanel('Work in progress',
-                           'Coming soon!'),
-                  width = 4
+                    br(),
+                    br(),
+                    'xG*: ',
+                    br(),
+                    'Isolated xG with rebound value added',
+                    style = 'font-size:16px;margin:5px;'),
+                  width = 4,
+                  status = 'primary',
+                  solidHeader = TRUE
                 )
               )
       )
@@ -354,6 +454,15 @@ server <- function(input, output) {
   
   output$rebounds2_unblocked_nhl <- renderUI({
     img(src = 'xg_rebounds_unblocked_nhl.jpg', height = '375px')
+  })
+  
+  # Passes & zone entries
+  output$passes <- renderUI({
+    img(src = 'passes.jpg', height = '350px')
+  })
+  
+  output$ozone_entries <- renderUI({
+    img(src = 'ozone_entries.jpg', height = '350px')
   })
 }
 

@@ -1,4 +1,3 @@
-library(readr)
 library(dplyr)
 library(sp)
 
@@ -193,6 +192,97 @@ process.model.data <- function(d) {
            on.goal, goal, rebound.shot, play.stopped, in.zone, out.zone)
   
   return(d)
+}
+
+# Extract pass data from processed play-by-play
+extract.pass.data <- function(d) {
+  passes.receptions.shots <- d %>%
+    filter(event %in% c('shot', 'pass', 'reception'))
+  
+  shots.after.receptions <- d %>%
+    filter(lag(event) == 'reception' &
+             lag(period) == period) %>%
+    filter(event == 'shot')
+  
+  shots.successful.passes.receptions <- passes.receptions.shots %>%
+    filter((event == 'shot' & id %in% shots.after.receptions$id) |
+             (event %in% c('reception', 'pass') & outcome == 'successful'))
+  
+  # Invalid pass ids
+  invalid.pass.ids <- shots.successful.passes.receptions %>%
+    filter((event == 'pass') & ((lead(event) != 'reception') |
+                                  (lead(event, 2) != 'shot') |
+                                  (id > (max(id) - 2)))) %>%
+    select(id)
+  
+  # Invalid reception ids
+  invalid.reception.ids <- shots.successful.passes.receptions %>%
+    filter((event == 'reception') & ((lead(event) != 'shot') |
+                                       (lag(event) != 'pass') |
+                                       (id == max(id)))) %>%
+    select(id)
+  
+  # Valid passes, receptions, shots
+  valid.passes.receptions.shots <- shots.successful.passes.receptions %>%
+    filter(!(id %in% invalid.pass.ids$id) & !(id %in% invalid.reception.ids$id))
+  
+  valid.passes <- valid.passes.receptions.shots %>%
+    filter(event %in% c('pass', 'shot')) %>%
+    mutate(resulting.shot.value = ifelse(event == 'pass' & lead(event) == 'shot',
+                                         lead(xgoal.all.no.last),
+                                         NA)) %>%
+    filter(event == 'pass')
+  
+  # Passes
+  passes <- valid.passes %>%
+    arrange(desc(resulting.shot.value)) %>%
+    mutate(danger = ifelse(resulting.shot.value > quantile(resulting.shot.value, 0.8),
+                           'high',
+                           'low'))
+  
+  # Players
+  players <- passes %>%
+    rename(player = shooter,
+           player.position = shooter.position) %>%
+    filter(danger == 'high') %>%
+    group_by(player) %>%
+    summarise(count = n(),
+              position = unique(player.position))
+  
+  return(list(passes = passes, players = players))
+}
+
+# Extract offensive zone entry data from play-by-play and summary
+extract.ozone.entry.data <- function(d, summ) {
+  ozone.entries <- d %>%
+    filter(event == 'controlledentry' & outcome == 'successful')
+  
+  ozone.entries <- ozone.entries[grepl('carry', ozone.entries$type),]
+  
+  ozone.entries <- ozone.entries %>% filter(y > -40 & y < 0)
+  
+  players <- ozone.entries %>%
+    rename(player = shooter,
+           player.position = shooter.position) %>%
+    group_by(player) %>%
+    summarise(count = n(),
+              position = unique(player.position))
+  
+  summ <- summ %>%
+    rename(player = Player) %>%
+    group_by(player) %>%
+    summarise(toi = sum(TOI))
+  
+  summ <- summ %>% select(player, toi)
+  
+  players <- left_join(players, summ, by = 'player')
+  
+  players$count.per.60 = players$count / (players$toi / (60 * 60))
+  
+  players <- players %>% ungroup()
+  ozone.entries <- ozone.entries %>% ungroup()
+  
+  return(list(ozone.entries = ozone.entries, players = players))
 }
 
 # Helper function for use when creating rink regions

@@ -1,3 +1,6 @@
+library(readr)
+library(readxl)
+
 source('functions/modeling.R')
 source('functions/prepare.R')
 source('functions/rink.R')
@@ -7,6 +10,10 @@ source('functions/visualize.R')
 files.available = TRUE
 
 file.names = c('data/pbp.rds',
+               'data/passes.rds',
+               'data/passes_players.rds',
+               'data/ozone_entries.rds',
+               'data/ozone_entries_players.rds',
                'data/pbp_all.rds',
                'data/regions_all.rds',
                'data/pbp_unblocked.rds',
@@ -24,6 +31,12 @@ for (file.name in file.names) {
 if (files.available == TRUE) {
   pbp <- readRDS('data/pbp.rds')
   
+  passes <- readRDS('data/passes.rds')
+  passes_players <- readRDS('data/passes_players.rds')
+  
+  ozone_entries <- readRDS('data/ozone_entries.rds')
+  ozone_entries_players <- readRDS('data/ozone_entries_players.rds')
+  
   pbp_all <- readRDS('data/pbp_all.rds')
   regions_all <- readRDS('data/regions_all.rds')
   
@@ -34,10 +47,12 @@ if (files.available == TRUE) {
   metrics <- readRDS('data/metrics.rds')
   
 } else {
+  season.summary <- read_excel("data/DATA_FILE_NAME.xlsx")
+  
   pbp <- read_csv('data/DATA_FILE_NAME.csv')
   pbp <- process.data(pbp)
   
-  # xG for use with rebounds
+  # xG
   all.shots <- get.shots(pbp, unblocked = FALSE)
   all.shots <- process.model.data(all.shots)
   
@@ -87,10 +102,26 @@ if (files.available == TRUE) {
   pbp_unblocked <- retval$d
   regions_unblocked <- retval$regions
   
+  # Passes
+  retval <- extract.pass.data(pbp)
+  passes <- retval$passes
+  passes_players <- retval$players
+  
+  # Offensive zone entries
+  retval <- extract.ozone.entry.data(pbp, season.summary)
+  ozone_entries <- retval$ozone.entries
+  ozone_entries_players <- retval$players
+  
   rm(retval)
   
   # Save
   saveRDS(pbp, 'data/pbp.rds')
+  
+  saveRDS(passes, 'data/passes.rds')
+  saveRDS(passes_players, 'data/passes_players.rds')
+  
+  saveRDS(ozone_entries, 'data/ozone_entries.rds')
+  saveRDS(ozone_entries_players, 'data/ozone_entries_players.rds')
   
   saveRDS(pbp_all, 'data/pbp_all.rds')
   saveRDS(regions_all, 'data/regions_all.rds')
@@ -173,6 +204,26 @@ xg.rebounds.unblocked <- plot.rebounds2(pbp_unblocked, unblocked = TRUE)
 ggsave(filename = paste0('www/', 'xg_rebounds_unblocked', '.jpg'),
        plot = xg.rebounds.unblocked,
        width = 20,
+       height = 6.5,
+       units = 'in',
+       dpi = 72)
+
+# Passes
+passes.plot <- plot.passes(passes, passes_players)
+
+ggsave(filename = paste0('www/', 'passes', '.jpg'),
+       plot = passes.plot,
+       width = 20,
+       height = 6.5,
+       units = 'in',
+       dpi = 72)
+
+# Offensive zone entries
+ozone.entries.plot <- plot.ozone.entries(ozone_entries, ozone_entries_players)
+
+ggsave(filename = paste0('www/', 'ozone_entries', '.jpg'),
+       plot = ozone.entries.plot,
+       width = 13,
        height = 6.5,
        units = 'in',
        dpi = 72)

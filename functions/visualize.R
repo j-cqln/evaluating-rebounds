@@ -528,17 +528,17 @@ plot.rebounds2 <- function(d, unblocked = FALSE) {
   background.color <- '#ffffff'
   gradient.low.color <- '#bedceb'
   gradient.high.color <- '#004b71'
-  diff.gradient.low.color <- '#3597c9'
+  diff.gradient.low.color <- '#c8213e'
   diff.gradient.mid.color <- '#d6d6d6'
-  diff.gradient.high.color <- '#c8213e'
+  diff.gradient.high.color <- '#3597c9'
   
   if (!unblocked) {
     size.label <- 'Shot attempts'
     
     # 1
-    xg.no.last.plot.fill.limits <- c(0.013, 0.15)
-    xg.no.last.plot.fill.breaks <- c(0.015, 0.15)
-    xg.no.last.plot.fill.labels <- c('0.015', '0.15')
+    xg.no.last.plot.fill.limits <- c(0.013, 0.16)
+    xg.no.last.plot.fill.breaks <- c(0.013, 0.16)
+    xg.no.last.plot.fill.labels <- c('0.013', '0.16')
     
     xg.no.last.plot.size.limits <- c(0, 45)
     xg.no.last.plot.size.breaks <- c(5, 20, 35)
@@ -554,9 +554,9 @@ plot.rebounds2 <- function(d, unblocked = FALSE) {
     rebounds.total.plot.size.labels <- c('5', '20', '35+')
     
     # 3
-    sum.plot.fill.limits <- c(0.014, 0.16)
-    sum.plot.fill.breaks <- c(0.015, 0.15)
-    sum.plot.fill.labels <- c('0.015', '0.15')
+    sum.plot.fill.limits <- c(0.013, 0.16)
+    sum.plot.fill.breaks <- c(0.013, 0.16)
+    sum.plot.fill.labels <- c('0.013', '0.16')
     
     sum.plot.size.limits <- c(0, 45)
     sum.plot.size.breaks <- c(5, 20, 35)
@@ -576,8 +576,8 @@ plot.rebounds2 <- function(d, unblocked = FALSE) {
     
     # 1
     xg.no.last.plot.fill.limits <- c(0.018, 0.16)
-    xg.no.last.plot.fill.breaks <- c(0.018, 0.15)
-    xg.no.last.plot.fill.labels <- c('0.018', '0.15')
+    xg.no.last.plot.fill.breaks <- c(0.018, 0.16)
+    xg.no.last.plot.fill.labels <- c('0.018', '0.16')
     
     xg.no.last.plot.size.limits <- c(0, 45)
     xg.no.last.plot.size.breaks <- c(5, 20, 35)
@@ -585,17 +585,17 @@ plot.rebounds2 <- function(d, unblocked = FALSE) {
     
     # 2
     rebounds.total.plot.fill.limits <- c(0.001, 0.007)
-    rebounds.total.plot.fill.breaks <- c(0.001, 0.006)
-    rebounds.total.plot.fill.labels <- c('0.001', '0.006')
+    rebounds.total.plot.fill.breaks <- c(0.001, 0.007)
+    rebounds.total.plot.fill.labels <- c('0.001', '0.007')
     
     rebounds.total.plot.size.limits <- c(0, 45)
     rebounds.total.plot.size.breaks <- c(5, 20, 35)
     rebounds.total.plot.size.labels <- c('5', '20', '35+')
     
     # 3
-    sum.plot.fill.limits <- c(0.02, 0.16)
-    sum.plot.fill.breaks <- c(0.02, 0.15)
-    sum.plot.fill.labels <- c('0.02', '0.15')
+    sum.plot.fill.limits <- c(0.018, 0.16)
+    sum.plot.fill.breaks <- c(0.018, 0.16)
+    sum.plot.fill.labels <- c('0.018', '0.16')
     
     sum.plot.size.limits <- c(0, 45)
     sum.plot.size.breaks <- c(5, 20, 35)
@@ -823,4 +823,138 @@ plot.rebounds2 <- function(d, unblocked = FALSE) {
                               ncol = 4)
   
   return(xg.rebounds)
+}
+
+# Plot passes
+plot.passes <- function(d, players) {
+  background.color <- '#ffffff'
+  
+  d <- d %>% filter(adj.x > 0) %>% select(x, y, danger)
+  
+  low.danger.passes.plot <- rink +
+    geom_density_2d_filled(data = d %>% filter(danger == 'low'),
+                           aes(x = x, y = y),
+                           alpha = 0.8,
+                           show.legend = FALSE) +
+    labs(title = 'Passes leading to low danger shot attempts',
+         subtitle = 'Lighter indicates higher pass density',
+         caption = 'Created by github.com/j-cqln') +
+    ylim(c(-100.1, -24)) +
+    xlim(c(-42.6, 42.6)) +
+    theme_pub(type = 'map', base_size = 36/3) +
+    theme(plot.background = element_rect(fill = background.color),
+          panel.background = element_rect(fill = background.color))
+  
+  high.danger.passes.plot <- rink +
+    geom_density_2d_filled(data = d %>% filter(danger == 'high'),
+                           aes(x = x, y = y),
+                           alpha = 0.8,
+                           show.legend = FALSE) +
+    labs(title = 'Passes leading to high danger shot attempts',
+         subtitle = 'Lighter indicates higher pass density',
+         caption = '') +
+    ylim(c(-100.1, -24)) +
+    xlim(c(-42.6, 42.6)) +
+    theme_pub(type = 'map', base_size = 36/3) +
+    theme(plot.background = element_rect(fill = background.color),
+          panel.background = element_rect(fill = background.color))
+  
+  players <- players %>%
+    arrange(desc(count)) %>%
+    mutate(id = row_number()) %>%
+    filter(id < 21) %>%
+    arrange(count) %>%
+    mutate(player = factor(player, player, ordered = TRUE))
+  
+  players.plot <- ggplot(data = players,
+                         aes(x = count, y = player)) +
+    geom_segment(aes(x = 5, xend = count,
+                     y = player, yend = player,
+                     color = position),
+                 show.legend = FALSE) +
+    geom_point(aes(color = position),
+               show.legend = FALSE) +
+    scale_color_manual(breaks = c('F', 'D'),
+                       values = c('F' = pubred, 'D' = pubblue)) +
+    geom_text(aes(label = count), hjust = -0.3) +
+    labs(title = 'Top 20 players by passes leading to high danger shots',
+         subtitle = 'Red indicates forwards, blue indicates defense',
+         # caption  = '',
+         x = 'Passes leading to high danger shots',
+         y = NULL) +
+    xlim(c(5, 25)) +
+    theme_pub(type = 'pop', base_size = 36/3) +
+    theme(plot.background = element_rect(fill = background.color),
+          panel.background = element_rect(fill = background.color))
+  
+  passes.plots <- grid.arrange(low.danger.passes.plot,
+                               high.danger.passes.plot,
+                               players.plot,
+                               ncol = 3)
+  
+  return(passes.plots)
+}
+
+# Plot zone entries
+plot.ozone.entries <- function(d, players) {
+  background.color <- '#ffffff'
+  
+  ozone.entries.plot <- rink +
+    geom_density_2d_filled(data = d,
+                           aes(x = x, y = y),
+                           alpha = 0.9,
+                           show.legend = FALSE) +
+    labs(title = 'Successful offensive zone entries',
+         subtitle = 'Lighter indicates higher success density, bottom is o-zone',
+         caption = 'Created by github.com/j-cqln',
+         x = 'East-west direction of rink (along blue line)', 
+         y = 'North-south direction of rink') +
+    coord_cartesian(ylim = c(-30, -20),
+                    xlim = c(-42.5, 42.5)) +
+    theme_pub(base_size = 36/3) +
+    theme(plot.background = element_rect(fill = background.color),
+          panel.background = element_rect(fill = background.color),
+          legend.background = element_rect(fill = background.color),
+          axis.line = element_blank(),
+          axis.ticks = element_blank(),
+          axis.text.x = element_blank(),
+          axis.text.y = element_blank(),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank())
+  
+  players <- players %>%
+    top_n(count.per.60, n = 20) %>%
+    arrange(count.per.60)
+  
+  players <- players %>%
+    distinct(player, .keep_all = TRUE)
+  
+  players$player = factor(players$player, players$player, ordered = TRUE)
+  
+  players.plot <- ggplot(data = players,
+                         aes(x = count.per.60, y = player)) +
+    geom_segment(aes(x = 6, xend = count.per.60,
+                     y = player, yend = player,
+                     color = position),
+                 show.legend = FALSE) +
+    geom_point(aes(color = position),
+               show.legend = FALSE) +
+    scale_color_manual(breaks = c('F', 'D'),
+                       values = c('F' = pubred, 'D' = pubblue)) +
+    geom_text(aes(label = round(count.per.60, 1)), hjust = -0.3) +
+    labs(title = 'Top 20 players by successful offensive zone entries/60',
+         subtitle = 'Red indicates forwards, blue indicates defense',
+         # caption  = '',
+         x = 'Successful offensive zone entries per 60 minutes played',
+         y = NULL) +
+    xlim(c(6, 26)) +
+    theme_pub(type = 'pop', base_size = 36/3) +
+    theme(plot.background = element_rect(fill = background.color),
+          panel.background = element_rect(fill = background.color))
+  
+  ozone.entries.plots <- grid.arrange(ozone.entries.plot,
+                                      players.plot,
+                                      ncol = 2)
+  
+  return(ozone.entries.plots)
 }
