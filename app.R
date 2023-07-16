@@ -289,8 +289,16 @@ ui <- dashboardPage(
                     solidHeader = TRUE),
                 
                 box(splitLayout(cellWidths = c('100%'),
-                                uiOutput('ozone_entries')),
-                    width = 8,
+                                uiOutput('ozone_entries_players')),
+                    width = 4,
+                    status = 'primary',
+                    solidHeader = TRUE)
+              ),
+              
+              fluidRow(
+                box(splitLayout(cellWidths = c('100%'),
+                                uiOutput('ozone_entries_map')),
+                    width = 12,
                     status = 'primary',
                     solidHeader = TRUE)
               )
@@ -461,8 +469,12 @@ server <- function(input, output) {
     img(src = 'passes.jpg', height = '350px')
   })
   
-  output$ozone_entries <- renderUI({
-    img(src = 'ozone_entries.jpg', height = '350px')
+  output$ozone_entries_map <- renderUI({
+    img(src = 'ozone_entries_map.jpg', height = '260px')
+  })
+  
+  output$ozone_entries_players <- renderUI({
+    img(src = 'ozone_entries_players.jpg', height = '325px')
   })
 }
 

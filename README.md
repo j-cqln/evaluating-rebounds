@@ -5,6 +5,6 @@ Women's hockey data visualization, including rebound value and xG, passes leadin
 
 See the dashboard [here](https://j-cqln.shinyapps.io/hockey-visualization/).
 
-Created as an entry to WHKYHAC + Sportlogiq Viz Launchpad.
+Created as an entry to WHKYHAC + Sportlogiq Viz Launchpad, awarded Best in Code at WHKYHAC 2023.
 
 PWHPA data from Sportlogiq, NHL data from MoneyPuck.com.

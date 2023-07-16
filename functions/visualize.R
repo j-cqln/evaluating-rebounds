@@ -834,10 +834,12 @@ plot.passes <- function(d, players) {
   low.danger.passes.plot <- rink +
     geom_density_2d_filled(data = d %>% filter(danger == 'low'),
                            aes(x = x, y = y),
-                           alpha = 0.8,
+                           alpha = 0.6,
+                           bins = 9,
                            show.legend = FALSE) +
+    scale_fill_brewer(palette = 'BuGn') +
     labs(title = 'Passes leading to low danger shot attempts',
-         subtitle = 'Lighter indicates higher pass density',
+         subtitle = 'Darker green indicates higher pass density',
          caption = 'Created by github.com/j-cqln') +
     ylim(c(-100.1, -24)) +
     xlim(c(-42.6, 42.6)) +
@@ -848,10 +850,12 @@ plot.passes <- function(d, players) {
   high.danger.passes.plot <- rink +
     geom_density_2d_filled(data = d %>% filter(danger == 'high'),
                            aes(x = x, y = y),
-                           alpha = 0.8,
+                           alpha = 0.6,
+                           bins = 9,
                            show.legend = FALSE) +
+    scale_fill_brewer(palette = 'BuGn') +
     labs(title = 'Passes leading to high danger shot attempts',
-         subtitle = 'Lighter indicates higher pass density',
+         subtitle = 'Darker green indicates higher pass density',
          caption = '') +
     ylim(c(-100.1, -24)) +
     xlim(c(-42.6, 42.6)) +
@@ -902,13 +906,15 @@ plot.ozone.entries <- function(d, players) {
   ozone.entries.plot <- rink +
     geom_density_2d_filled(data = d,
                            aes(x = x, y = y),
-                           alpha = 0.9,
+                           alpha = 0.6,
+                           bins = 9,
                            show.legend = FALSE) +
+    scale_fill_brewer(palette = 'BuGn') +
     labs(title = 'Successful offensive zone entries',
-         subtitle = 'Lighter indicates higher success density, bottom is o-zone',
+         subtitle = 'Darker green indicates higher success density, bottom is o-zone',
          caption = 'Created by github.com/j-cqln',
-         x = 'East-west direction of rink (along blue line)', 
-         y = 'North-south direction of rink') +
+         x = 'east - west (along blue line)', 
+         y = 'o-zone - d-zone') +
     coord_cartesian(ylim = c(-30, -20),
                     xlim = c(-42.5, 42.5)) +
     theme_pub(base_size = 36/3) +
@@ -952,9 +958,7 @@ plot.ozone.entries <- function(d, players) {
     theme(plot.background = element_rect(fill = background.color),
           panel.background = element_rect(fill = background.color))
   
-  ozone.entries.plots <- grid.arrange(ozone.entries.plot,
-                                      players.plot,
-                                      ncol = 2)
+  ozone.entries.plots <- list(ozone.entries.plot, players.plot)
   
   return(ozone.entries.plots)
 }

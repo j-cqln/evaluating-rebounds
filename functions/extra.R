@@ -714,14 +714,7 @@ file.names = c('data/shots_nhl.rds',
                'data/models_nhl.rds',
                'data/metrics_nhl.rds')
 
-for (file.name in file.names) {
-  if (!file.exists(file.name)) {
-    files.available = FALSE
-    break
-  }
-}
-
-if (files.available == TRUE) {
+if (all(file.exists(file.names))) {
   shots <- readRDS('data/shots_nhl.rds')
   
   shots_unblocked <- readRDS('data/shots_unblocked_nhl.rds')

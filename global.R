@@ -21,14 +21,7 @@ file.names = c('data/pbp.rds',
                'data/models.rds',
                'data/metrics.rds')
 
-for (file.name in file.names) {
-  if (!file.exists(file.name)) {
-    files.available = FALSE
-    break
-  }
-}
-
-if (files.available == TRUE) {
+if (all(file.exists(file.names))) {
   pbp <- readRDS('data/pbp.rds')
   
   passes <- readRDS('data/passes.rds')
@@ -221,9 +214,16 @@ ggsave(filename = paste0('www/', 'passes', '.jpg'),
 # Offensive zone entries
 ozone.entries.plot <- plot.ozone.entries(ozone_entries, ozone_entries_players)
 
-ggsave(filename = paste0('www/', 'ozone_entries', '.jpg'),
-       plot = ozone.entries.plot,
-       width = 13,
+ggsave(filename = paste0('www/', 'ozone_entries_map', '.jpg'),
+       plot = ozone.entries.plot[[1]],
+       width = 20,
+       height = 4.5,
+       units = 'in',
+       dpi = 72)
+
+ggsave(filename = paste0('www/', 'ozone_entries_players', '.jpg'),
+       plot = ozone.entries.plot[[2]],
+       width = 7,
        height = 6.5,
        units = 'in',
        dpi = 72)
