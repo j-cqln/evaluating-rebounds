@@ -7,9 +7,9 @@ source('functions/rink.R')
 source('functions/visualize.R')
 
 # Read data
-files.available = TRUE
+files_available = TRUE
 
-file.names = c('data/pbp.rds',
+file_names = c('data/pbp.rds',
                'data/passes.rds',
                'data/passes_players.rds',
                'data/ozone_entries.rds',
@@ -21,7 +21,7 @@ file.names = c('data/pbp.rds',
                'data/models.rds',
                'data/metrics.rds')
 
-if (all(file.exists(file.names))) {
+if (all(file.exists(file_names))) {
   pbp <- readRDS('data/pbp.rds')
   
   passes <- readRDS('data/passes.rds')
@@ -40,50 +40,50 @@ if (all(file.exists(file.names))) {
   metrics <- readRDS('data/metrics.rds')
   
 } else {
-  season.summary <- read_excel("data/DATA_FILE_NAME.xlsx")
+  season_summary <- read_excel("data/DATA_FILE_NAME.xlsx")
   
   pbp <- read_csv('data/DATA_FILE_NAME.csv')
   pbp <- process.data(pbp)
   
   # xG
-  all.shots <- get.shots(pbp, unblocked = FALSE)
-  all.shots <- process.model.data(all.shots)
+  all_shots <- get.shots(pbp, unblocked = FALSE)
+  all_shots <- process.model.data(all_shots)
   
-  model.goal.all <- model(all.shots, all.shots$goal)
-  all.shots$xgoal.all <- predict(model.goal.all, all.shots, type = 'response')
-  a.goal.all <- auc(as.integer(as.logical(all.shots$goal)), all.shots$xgoal.all)
-  ll.goal.all <- logLoss(all.shots$goal, all.shots$xgoal.all)
+  model_goal_all <- model(all_shots, all_shots$goal)
+  all_shots$xgoal_all <- predict(model_goal_all, all_shots, type = 'response')
+  a_goal_all <- auc(as.integer(as.logical(all_shots$goal)), all_shots$xgoal_all)
+  ll_goal_all <- logLoss(all_shots$goal, all_shots$xgoal_all)
   
-  all.shots$xgoal.all.no.last <- predict(model.goal.all,
-                                         all.shots %>% mutate(last.event = 'none'),
+  all_shots$xgoal_all_no_last <- predict(model_goal_all,
+                                         all_shots %>% mutate(last_event = 'none'),
                                          allow.new.levels = TRUE,
                                          type = 'response')
-  a.goal.all.no.last <- auc(as.integer(as.logical(all.shots$goal)), all.shots$xgoal.all.no.last)
-  ll.goal.all.no.last <- logLoss(all.shots$goal, all.shots$xgoal.all.no.last)
+  a_goal_all_no_last <- auc(as.integer(as.logical(all_shots$goal)), all_shots$xgoal_all_no_last)
+  ll_goal_all_no_last <- logLoss(all_shots$goal, all_shots$xgoal_all_no_last)
   
-  unblocked.shots <- get.shots(pbp, unblocked = TRUE)
-  unblocked.shots <- process.model.data(unblocked.shots)
+  unblocked_shots <- get.shots(pbp, unblocked = TRUE)
+  unblocked_shots <- process.model.data(unblocked_shots)
   
-  model.goal.unblocked <- model(unblocked.shots, unblocked.shots$goal)
-  unblocked.shots$xgoal.unblocked <- predict(model.goal.unblocked, unblocked.shots, type = 'response')
-  a.goal.unblocked <- auc(as.integer(as.logical(unblocked.shots$goal)), unblocked.shots$xgoal.unblocked)
-  ll.goal.unblocked <- logLoss(unblocked.shots$goal, unblocked.shots$xgoal.unblocked)
+  model_goal_unblocked <- model(unblocked_shots, unblocked_shots$goal)
+  unblocked_shots$xgoal_unblocked <- predict(model_goal_unblocked, unblocked_shots, type = 'response')
+  a_goal_unblocked <- auc(as.integer(as.logical(unblocked_shots$goal)), unblocked_shots$xgoal_unblocked)
+  ll_goal_unblocked <- logLoss(unblocked_shots$goal, unblocked_shots$xgoal_unblocked)
   
-  unblocked.shots$xgoal.unblocked.no.last <- predict(model.goal.unblocked,
-                                                     unblocked.shots %>% mutate(last.event = 'none'),
+  unblocked_shots$xgoal_unblocked_no_last <- predict(model_goal_unblocked,
+                                                     unblocked_shots %>% mutate(last_event = 'none'),
                                                      allow.new.levels = TRUE,
                                                      type = 'response')
-  a.goal.unblocked.no.last <- auc(as.integer(as.logical(unblocked.shots$goal)), unblocked.shots$xgoal.unblocked.no.last)
-  ll.goal.unblocked.no.last <- logLoss(unblocked.shots$goal, unblocked.shots$xgoal.unblocked.no.last)
+  a_goal_unblocked_no_last <- auc(as.integer(as.logical(unblocked_shots$goal)), unblocked_shots$xgoal_unblocked_no_last)
+  ll_goal_unblocked_no_last <- logLoss(unblocked_shots$goal, unblocked_shots$xgoal_unblocked_no_last)
   
-  models <- list(model.goal.all, model.goal.unblocked)
-  metrics <- data.frame(model = c('goal.all', 'goal.all.no.last', 'goal.unblocked', 'goal.unblocked.no.last'),
-                        train.auc = c(a.goal.all, a.goal.all.no.last, a.goal.unblocked, a.goal.unblocked.no.last),
-                        train.log.loss = c(ll.goal.all, ll.goal.all.no.last, ll.goal.unblocked, ll.goal.unblocked.no.last))
+  models <- list(model_goal_all, model_goal_unblocked)
+  metrics <- data.frame(model = c('goal_all', 'goal_all_no_last', 'goal_unblocked', 'goal_unblocked_no_last'),
+                        train.auc = c(a_goal_all, a_goal_all_no_last, a_goal_unblocked, a_goal_unblocked_no_last),
+                        train.log.loss = c(ll_goal_all, ll_goal_all_no_last, ll_goal_unblocked, ll_goal_unblocked_no_last))
   
   # Rebounds
-  pbp <- left_join(pbp, all.shots %>% select(id, xgoal.all, xgoal.all.no.last), by = 'id')
-  pbp <- left_join(pbp, unblocked.shots %>% select(id, xgoal.unblocked, xgoal.unblocked.no.last), by = 'id')
+  pbp <- left_join(pbp, all_shots %>% select(id, xgoal_all, xgoal_all_no_last), by = 'id')
+  pbp <- left_join(pbp, unblocked_shots %>% select(id, xgoal_unblocked, xgoal_unblocked_no_last), by = 'id')
   
   retval <- get.regions(pbp)
   retval <- get.regions.rebounds(retval$d, retval$regions, unblocked = FALSE)
@@ -101,8 +101,8 @@ if (all(file.exists(file.names))) {
   passes_players <- retval$players
   
   # Offensive zone entries
-  retval <- extract.ozone.entry.data(pbp, season.summary)
-  ozone_entries <- retval$ozone.entries
+  retval <- extract.ozone.entry.data(pbp, season_summary)
+  ozone_entries <- retval$ozone_entries
   ozone_entries_players <- retval$players
   
   rm(retval)
@@ -127,102 +127,102 @@ if (all(file.exists(file.names))) {
 }
 
 # Regions
-regions.plot.all <- plot.regions(regions_all, unblocked = FALSE)
+regions_plot_all <- plot.regions(regions_all, unblocked = FALSE)
 
 ggsave(filename = paste0('www/', 'regions_all', '.jpg'), 
-       plot = regions.plot.all,
+       plot = regions_plot_all,
        width = 5,
        height = 6.5,
        units = 'in',
        dpi = 72)
 
-regions.plot.unblocked <- plot.regions(regions_unblocked, unblocked = TRUE)
+regions_plot_unblocked <- plot.regions(regions_unblocked, unblocked = TRUE)
 
 ggsave(filename = paste0('www/', 'regions_unblocked', '.jpg'),
-       plot = regions.plot.unblocked,
+       plot = regions_plot_unblocked,
        width = 5,
        height = 6.5,
        units = 'in',
        dpi = 72)
 
 # xG
-xg.plot.all <- plot.xg(regions_all, unblocked = FALSE)
+xg_plot_all <- plot.xg(regions_all, unblocked = FALSE)
 
 ggsave(filename = paste0('www/', 'xg_all', '.jpg'), 
-       plot = xg.plot.all,
+       plot = xg_plot_all,
        width = 5,
        height = 6.5,
        units = 'in',
        dpi = 72)
 
-xg.plot.unblocked <- plot.xg(regions_unblocked, unblocked = TRUE)
+xg_plot_unblocked <- plot.xg(regions_unblocked, unblocked = TRUE)
 
 ggsave(filename = paste0('www/', 'xg_unblocked', '.jpg'),
-       plot = xg.plot.unblocked,
+       plot = xg_plot_unblocked,
        width = 5,
        height = 6.5,
        units = 'in',
        dpi = 72)
 
 # Rebounds
-overall.rebounds.all <- plot.rebounds1(pbp_all, unblocked = FALSE)
+overall_rebounds_all <- plot.rebounds1(pbp_all, unblocked = FALSE)
 
 ggsave(filename = paste0('www/', 'rebounds_all', '.jpg'), 
-       plot = overall.rebounds.all,
+       plot = overall_rebounds_all,
        width = 20,
        height = 6.5,
        units = 'in',
        dpi = 72)
 
-overall.rebounds.unblocked <- plot.rebounds1(pbp_unblocked, unblocked = TRUE)
+overall_rebounds_unblocked <- plot.rebounds1(pbp_unblocked, unblocked = TRUE)
 
 ggsave(filename = paste0('www/', 'rebounds_unblocked', '.jpg'),
-       plot = overall.rebounds.unblocked,
+       plot = overall_rebounds_unblocked,
        width = 20,
        height = 6.5,
        units = 'in',
        dpi = 72)
 
-xg.rebounds.all <- plot.rebounds2(pbp_all, unblocked = FALSE)
+xg_rebounds_all <- plot.rebounds2(pbp_all, unblocked = FALSE)
 
 ggsave(filename = paste0('www/', 'xg_rebounds_all', '.jpg'), 
-       plot = xg.rebounds.all,
+       plot = xg_rebounds_all,
        width = 20,
        height = 6.5,
        units = 'in',
        dpi = 72)
 
-xg.rebounds.unblocked <- plot.rebounds2(pbp_unblocked, unblocked = TRUE)
+xg_rebounds_unblocked <- plot.rebounds2(pbp_unblocked, unblocked = TRUE)
 
 ggsave(filename = paste0('www/', 'xg_rebounds_unblocked', '.jpg'),
-       plot = xg.rebounds.unblocked,
+       plot = xg_rebounds_unblocked,
        width = 20,
        height = 6.5,
        units = 'in',
        dpi = 72)
 
 # Passes
-passes.plot <- plot.passes(passes, passes_players)
+passes_plot <- plot.passes(passes, passes_players)
 
 ggsave(filename = paste0('www/', 'passes', '.jpg'),
-       plot = passes.plot,
+       plot = passes_plot,
        width = 20,
        height = 6.5,
        units = 'in',
        dpi = 72)
 
 # Offensive zone entries
-ozone.entries.plot <- plot.ozone.entries(ozone_entries, ozone_entries_players)
+ozone_entries_plot <- plot.ozone.entries(ozone_entries, ozone_entries_players)
 
 ggsave(filename = paste0('www/', 'ozone_entries_map', '.jpg'),
-       plot = ozone.entries.plot[[1]],
+       plot = ozone_entries_plot[[1]],
        width = 20,
        height = 4.5,
        units = 'in',
        dpi = 72)
 
 ggsave(filename = paste0('www/', 'ozone_entries_players', '.jpg'),
-       plot = ozone.entries.plot[[2]],
+       plot = ozone_entries_plot[[2]],
        width = 7,
        height = 6.5,
        units = 'in',

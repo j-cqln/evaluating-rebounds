@@ -3,10 +3,10 @@
 library(ggplot2)
 library(grid)
 
-dark.rink.color <- '#000000'
-light.rink.color <- '#ffffff'
+dark_rink_color <- '#000000'
+light_rink_color <- '#ffffff'
 
-polygon2 = function(x, y, border = dark.rink.color, lwd = 1, col = NA){
+polygon2 = function(x, y, border = dark_rink_color, lwd = 1, col = NA){
   a = eval(substitute(
     expr = {
       aes(x = x, y = y)
@@ -26,7 +26,7 @@ segments2 = function(x, y, xend, yend, col = 1, lwd = 3, lty = 1){
   assign('p', p + lp, envir= .GlobalEnv)
 }
 
-lines2 = function(x, y, col = dark.rink.color, lwd = stdlwd, lty = 1){
+lines2 = function(x, y, col = dark_rink_color, lwd = stdlwd, lty = 1){
   a = eval(substitute(
     expr = {
       aes(x = x, y = y)
@@ -36,16 +36,16 @@ lines2 = function(x, y, col = dark.rink.color, lwd = stdlwd, lty = 1){
   assign('p', p + lp, envir = .GlobalEnv)
 }
 
-rect2 = function(xleft, ybottom, xright, ytop, col = NA, border = dark.rink.color, lwd = stdlwd){
+rect2 = function(xleft, ybottom, xright, ytop, col = NA, border = dark_rink_color, lwd = stdlwd){
   polygon2(c(xleft, xleft, xright, xright), c(ytop, ybottom, ybottom, ytop), border = border, col = col, lwd = lwd)
 }
 
-full.rink = function(color = TRUE) {
+full_rink = function(color = TRUE) {
   red = '#b3b3b3'; blue = '#b3b3b3'; lightblue = '#cccccc'
   
   if (color) { red = '#da6e80'; blue = '#85a3e2'; lightblue = '#9ad3eb' }
   
-  faceoff.circle = function(x, y) {
+  faceoff_circle = function(x, y) {
     theta = seq(0,2*pi, length = 300)
     dd <- (5+7/12)/2 # http://www.nhl.com/ice/news.htm?id=733257
     
@@ -78,7 +78,7 @@ full.rink = function(color = TRUE) {
       col = red, lwd = stdlwd)
   }
   
-  goal.crease.2 = function(flip = FALSE) {
+  goal_crease_2 = function(flip = FALSE) {
     xseq = c()
     yseq = c()
     theta = c()
@@ -119,28 +119,28 @@ full.rink = function(color = TRUE) {
   polygon2(-42.5 + 10*cos(theta2), 10*sin(theta2), lwd = stdlwd, border = red)
   
   # top base/blue line
-  rect2(-42.5, 25, 42.5, 26, col = blue, border = light.rink.color, lwd = .001)
+  rect2(-42.5, 25, 42.5, 26, col = blue, border = light_rink_color, lwd = .001)
   
   # bottom blue line
-  rect2(-42.5, -25, 42.5, -26, col = blue, border = light.rink.color, lwd = .001)
+  rect2(-42.5, -25, 42.5, -26, col = blue, border = light_rink_color, lwd = .001)
   
   # center red line
-  rect2(-42.5, -0.5, 42.5, 0.5, col = red, border = light.rink.color, lwd = .001)
+  rect2(-42.5, -0.5, 42.5, 0.5, col = red, border = light_rink_color, lwd = .001)
   
   # dotted white line
-  lines2(c(-42.5, 42.5), c(0, 0), lty = 2, lwd = 1, col = light.rink.color)
+  lines2(c(-42.5, 42.5), c(0, 0), lty = 2, lwd = 1, col = light_rink_color)
   
   # goal line
-  goal.line.extreme = 42.5 - 28 + sqrt(28^2 - (28-11)^2)
+  goal_line_extreme = 42.5 - 28 + sqrt(28^2 - (28-11)^2)
   
-  lines2(goal.line.extreme*c(-1, 1), rep(89,2), col = red, lwd = stdlwd)
-  lines2(goal.line.extreme*c(-1, 1), rep(-89,2), col = red, lwd = stdlwd)
+  lines2(goal_line_extreme*c(-1, 1), rep(89,2), col = red, lwd = stdlwd)
+  lines2(goal_line_extreme*c(-1, 1), rep(-89,2), col = red, lwd = stdlwd)
   
   # goal net
   lines2(c(-3,-3,3,3), c(90,92,92,90)-1, col = 1, lwd = stdlwd)
   lines2(c(-3,-3,3,3), -(c(90,92,92,90)-1), col = 1, lwd = stdlwd)
-  goal.crease.2();
-  goal.crease.2(flip = TRUE)
+  goal_crease_2();
+  goal_crease_2(flip = TRUE)
   
   # traps
   segments2(c(-11, 11, -11, 11), c(89, 89,-89, -89),
@@ -148,23 +148,23 @@ full.rink = function(color = TRUE) {
   segments2(c( -11, 11), c(-89, -89),
             c(-14, 14), c(-100, -100), col = red, lwd = stdlwd)
   
-  faceoff.circle(-22, 69)
-  faceoff.circle(22, 69)
+  faceoff_circle(-22, 69)
+  faceoff_circle(22, 69)
   
-  faceoff.circle(-22, -69)
-  faceoff.circle(22, -69)
+  faceoff_circle(-22, -69)
+  faceoff_circle(22, -69)
   
-  faceoff.dot = function(x, y, r = 1, col = red) {
+  faceoff_dot = function(x, y, r = 1, col = red) {
     polygon2(x + r*cos(theta),
              y + r*sin(theta),
              col = col,
-             border = light.rink.color, lwd = .001)
+             border = light_rink_color, lwd = .001)
   }
   
-  faceoff.dot(22, 20);
-  faceoff.dot(22, -20);
-  faceoff.dot(-22, 20);
-  faceoff.dot(-22, -20);
+  faceoff_dot(22, 20);
+  faceoff_dot(22, -20);
+  faceoff_dot(-22, 20);
+  faceoff_dot(-22, -20);
   
   lines2(c(-42.5, # outer edge, top
            -42.5 + 28 - 28*cos(seq(0, pi/2, length = 20)),
@@ -174,7 +174,7 @@ full.rink = function(color = TRUE) {
            72 + 28*sin(seq(0, pi/2, length = 20)),
            72 + 28*sin(seq(pi/2, 0, length = 20)),
            -24),
-         col = dark.rink.color, lwd = stdlwd)
+         col = dark_rink_color, lwd = stdlwd)
   
   lines2(c(-42.5, # outer edge, bottom
            -42.5 + 28 - 28*cos(seq(0, pi/2, length = 20)),
@@ -184,13 +184,13 @@ full.rink = function(color = TRUE) {
            -72 - 28*sin(seq(0, pi/2, length = 20)),
            -72 - 28*sin(seq(pi/2, 0, length = 20)),
            -24),
-         col = dark.rink.color, lwd = stdlwd)
+         col = dark_rink_color, lwd = stdlwd)
   
-  faceoff.dot(0, 0, .5, blue)
+  faceoff_dot(0, 0, .5, blue)
 }
 
 stdlwd <- .5
 
 p <- ggplot()
-full.rink(color = TRUE)
+full_rink(color = TRUE)
 rink <- p

@@ -2,12 +2,12 @@ library(dplyr)
 library(sp)
 
 # Time cutoffs and defaults in seconds
-rebound.time.cutoff <- 3
-last.event.time.cutoff <- 5
-time.since.last.default <- 99
+rebound_time_cutoff <- 3
+last_event_time_cutoff <- 5
+time_since_last_default <- 99
 
 # Regions used
-region.names <- c('inner.slot', 'right.slot', 'left.slot', 'high.slot',
+region_names <- c('inner.slot', 'right.slot', 'left.slot', 'high.slot',
                   'right.outside', 'left.outside',
                   'right.point', 'left.point', 'center.point',
                   'other')
@@ -15,47 +15,46 @@ region.names <- c('inner.slot', 'right.slot', 'left.slot', 'high.slot',
 # Rename data columns
 process.names <- function(d) {
   d <- d %>%
-    rename(season.type = seasonstage,
+    rename(season_type = seasonstage,
            team = teamname,
-           opposing.team = opposingteamname,
-           is.home.team = ishomegame,
-           possession.team = teaminpossession,
-           current.possession = currentpossession,
-           strength.state = strengthstate,
-           team.skaters.on.ice = teamskatersonicecount,
-           opposing.team.skaters.on.ice = opposingteamskatersonicecount,
+           opposing_team = opposingteamname,
+           is_home_team = ishomegame,
+           possession_team = teaminpossession,
+           current_possession = currentpossession,
+           strength_state = strengthstate,
+           team_skaters_on_ice = teamskatersonicecount,
+           opposing_team_skaters_on_ice = opposingteamskatersonicecount,
            time = compiledgametime,
-           goal.diff = scoredifferential,
-           adj.x = xadjcoord,
-           adj.y = yadjcoord,
+           goal_diff = scoredifferential,
+           adj_x = xadjcoord,
+           adj_y = yadjcoord,
            shooter = player,
-           shooter.position = playerprimaryposition,
-           own.goalie = goalie,
+           shooter_position = playerprimaryposition,
+           own_goalie = goalie,
            goalie = opposing_goalie,
            event = eventname,
-           xg.all.attempts = xg_all_attempts,
-           creates.rebound = createsrebound,
-           shot.type = shottype,
-           shot.aim = shotaim) %>%
+           creates_rebound = createsrebound,
+           shot_type = shottype,
+           shot_aim = shotaim) %>%
     mutate(season = 2023)
   
   return(d)
 }
 
 # Convert coordinates into plot-able format
-process.coords <- function(d, half.rink = TRUE, horizontal = FALSE) {
-  x <- d$adj.x
-  y <- d$adj.y
+process.coords <- function(d, half_rink = TRUE, horizontal = FALSE) {
+  x <- d$adj_x
+  y <- d$adj_y
   
-  if (half.rink == TRUE) {
+  if (half_rink == TRUE) {
     x <- -abs(x)
   }
   
   if (horizontal == TRUE) {
     d$x <- x
-    d$y <- ifelse(d$adj.x > 0, -y, y)
+    d$y <- ifelse(d$adj_x > 0, -y, y)
   } else {
-    d$x <- ifelse(d$adj.x > 0, y, -y)
+    d$x <- ifelse(d$adj_x > 0, y, -y)
     d$y <- x
   }
   
@@ -65,110 +64,110 @@ process.coords <- function(d, half.rink = TRUE, horizontal = FALSE) {
 # Data cleaning, etc.
 process.data <- function(d) {
   d <- process.names(d)
-  d <- process.coords(d, half.rink = TRUE, horizontal = FALSE)
+  d <- process.coords(d, half_rink = TRUE, horizontal = FALSE)
   
   # Shot info
   d <- d %>%
     mutate(id = row_number(),
-           own.goalie = ifelse(!is.na(own.goalie), own.goalie, ''),
+           own_goalie = ifelse(!is.na(own_goalie), own_goalie, ''),
            goalie = ifelse(!is.na(goalie), goalie, ''),
            dist = sqrt(x^2 + (y + 89)^2),
            angle = atan(x / (y + 89)) * (180 / pi),
-           abs.angle = abs(angle),
-           time.since.last = ifelse((time - lag(time)) >= 0 &
+           abs_angle = abs(angle),
+           time_since_last = ifelse((time - lag(time)) >= 0 &
                                       date == lag(date) &
                                       game == lag(game) &
                                       period == lag(period),
                                     time - lag(time),
-                                    time.since.last.default),
-           time.since.last = ifelse(!is.na(time.since.last),
-                                    time.since.last,
-                                    time.since.last.default),
-           last.event = ifelse(time.since.last <= last.event.time.cutoff,
+                                    time_since_last_default),
+           time_since_last = ifelse(!is.na(time_since_last),
+                                    time_since_last,
+                                    time_since_last_default),
+           last_event = ifelse(time_since_last <= last_event_time_cutoff,
                                lag(event),
                                'none'),
-           last.event = ifelse(is.na(last.event), 'none', last.event),
-           last.event.team = ifelse(last.event == 'none', NA, lag(team)),
-           angle.change = ifelse(last.event != 'none',
+           last_event = ifelse(is.na(last_event), 'none', last_event),
+           last_event_team = ifelse(last_event == 'none', NA, lag(team)),
+           angle_change = ifelse(last_event != 'none',
                                  abs(angle - lag(angle)),
                                  0),
-           on.goal = ifelse(event == 'shot' & outcome == 'successful', 1, 0))
+           on_goal = ifelse(event == 'shot' & outcome == 'successful', 1, 0))
   
   # Subsequent events info
   d2 <- d %>%
     filter(event == 'shot') %>%
-    mutate(rebound.shot = ifelse((lead(time) - time) <= rebound.time.cutoff &
+    mutate(rebound_shot = ifelse((lead(time) - time) <= rebound_time_cutoff &
                                    (lead(time) - time) >= 0 &
                                    lead(date) == date &
                                    lead(game) == game &
                                    lead(period) == period &
                                    lead(team) == team,
                                  1, 0),
-           creates.rebound.shot = ifelse(creates.rebound == 1 &
-                                           rebound.shot == 1,
+           creates_rebound_shot = ifelse(creates_rebound == 1 &
+                                           rebound_shot == 1,
                                          1, 0))
-  d2 <- d2 %>% select(id, rebound.shot, creates.rebound.shot)
+  d2 <- d2 %>% select(id, rebound_shot, creates_rebound_shot)
   d <- left_join(d, d2, by = 'id')
   
   d2 <- d %>%
     filter(event != 'penaltydrawn') %>%
     filter((event == 'save') | (lag(event) == 'save')) %>%
-    mutate(after.save = ifelse(event == 'save' & period == lead(period) & game == lead(game), lead(event), NA),
-           after.save.home.team = ifelse(!is.na(after.save), lead(is.home.team), NA),
-           after.save.adj.x = ifelse(!is.na(after.save), lead(adj.x), NA))
-  d2 <- d2 %>% select(id, after.save, after.save.home.team, after.save.adj.x)
+    mutate(after_save = ifelse(event == 'save' & period == lead(period) & game == lead(game), lead(event), NA),
+           after_save_home_team = ifelse(!is.na(after_save), lead(is_home_team), NA),
+           after_save_adj_x = ifelse(!is.na(after_save), lead(adj_x), NA))
+  d2 <- d2 %>% select(id, after_save, after_save_home_team, after_save_adj_x)
   d <- left_join(d, d2, by = 'id')
   
   d2 <- d %>%
     filter(event != 'penaltydrawn') %>%
     filter((event == 'shot') | (lag(event) == 'shot')) %>%
-    mutate(after.shot = ifelse(event == 'shot' & period == lead(period) & game == lead(game), lead(event), NA),
-           after.shot.home.team = ifelse(!is.na(after.shot), lead(is.home.team), NA),
-           after.shot.adj.x = ifelse(!is.na(after.shot), lead(adj.x), NA))
-  d2 <- d2 %>% select(id, after.shot, after.shot.home.team, after.shot.adj.x)
+    mutate(after_shot = ifelse(event == 'shot' & period == lead(period) & game == lead(game), lead(event), NA),
+           after_shot_home_team = ifelse(!is.na(after_shot), lead(is_home_team), NA),
+           after_shot_adj_x = ifelse(!is.na(after_shot), lead(adj_x), NA))
+  d2 <- d2 %>% select(id, after_shot, after_shot_home_team, after_shot_adj_x)
   d <- left_join(d, d2, by = 'id')
   
   d2 <- d %>%
     filter((event == 'shot') | (event == 'save')) %>%
-    mutate(play.stopped = ifelse(event == 'shot' &
+    mutate(play_stopped = ifelse(event == 'shot' &
                                    lead(event) == 'save' &
-                                   ((lead(after.save) == 'faceoff') |
-                                      (lead(after.save) == 'penalty' & lead(after.save.home.team) == lead(is.home.team))),
+                                   ((lead(after_save) == 'faceoff') |
+                                      (lead(after_save) == 'penalty' & lead(after_save_home_team) == lead(is_home_team))),
                                  1, 0),
-           play.stopped = ifelse(event == 'shot' &
-                                   ((after.shot == 'faceoff') |
-                                      (after.shot == 'penalty' & after.shot.home.team == is.home.team)),
-                                 1, play.stopped),
-           in.zone = ifelse(play.stopped == 0 &
-                              ((lead(after.save.home.team) == lead(is.home.team) & lead(after.save.adj.x) <= -24) |
-                                 (lead(after.save.home.team) != lead(is.home.team) & lead(after.save.adj.x) >= 24)),
+           play_stopped = ifelse(event == 'shot' &
+                                   ((after_shot == 'faceoff') |
+                                      (after_shot == 'penalty' & after_shot_home_team == is_home_team)),
+                                 1, play_stopped),
+           in_zone = ifelse(play_stopped == 0 &
+                              ((lead(after_save_home_team) == lead(is_home_team) & lead(after_save_adj_x) <= -24) |
+                                 (lead(after_save_home_team) != lead(is_home_team) & lead(after_save_adj_x) >= 24)),
                             1, 0),
-           in.zone = ifelse(play.stopped == 0 &
-                              ((after.shot.home.team == is.home.team & after.shot.adj.x <= -24) |
-                                 (after.shot.home.team != is.home.team & after.shot.adj.x >= 24)),
-                            1, in.zone),
-           out.zone = ifelse(play.stopped == 0 &
-                               ((lead(after.save.home.team) == lead(is.home.team) & lead(after.save.adj.x) > -24) |
-                                  (lead(after.save.home.team) != lead(is.home.team) & lead(after.save.adj.x) < 24)),
+           in_zone = ifelse(play_stopped == 0 &
+                              ((after_shot_home_team == is_home_team & after_shot_adj_x <= -24) |
+                                 (after_shot_home_team != is_home_team & after_shot_adj_x >= 24)),
+                            1, in_zone),
+           out_zone = ifelse(play_stopped == 0 &
+                               ((lead(after_save_home_team) == lead(is_home_team) & lead(after_save_adj_x) > -24) |
+                                  (lead(after_save_home_team) != lead(is_home_team) & lead(after_save_adj_x) < 24)),
                              1, 0),
-           out.zone = ifelse(play.stopped == 0 &
-                               ((after.shot.home.team == is.home.team & after.shot.adj.x > -24) |
-                                  (after.shot.home.team != is.home.team & after.shot.adj.x < 24)),
-                             1, out.zone))
-  d2 <- d2 %>% select(id, play.stopped, in.zone, out.zone)
+           out_zone = ifelse(play_stopped == 0 &
+                               ((after_shot_home_team == is_home_team & after_shot_adj_x > -24) |
+                                  (after_shot_home_team != is_home_team & after_shot_adj_x < 24)),
+                             1, out_zone))
+  d2 <- d2 %>% select(id, play_stopped, in_zone, out_zone)
   d <- left_join(d, d2, by = 'id')
   
   # Clean
-  drop <- c('after.save', 'after.save.home.team', 'after.save.adj.x',
-            'after.shot', 'after.shot.home.team', 'after.shot.adj.x')
+  drop <- c('after_save', 'after_save_home_team', 'after_save_adj_x',
+            'after_shot', 'after_shot_home_team', 'after_shot_adj_x')
   
   d <- d %>%
-    mutate(creates.rebound.shot = ifelse((event == 'shot') & !is.na(creates.rebound.shot), creates.rebound.shot, 0),
-           on.goal = ifelse((event == 'shot') & !is.na(on.goal), on.goal, 0),
-           play.stopped = ifelse((event == 'shot') & !is.na(play.stopped), play.stopped, 0),
-           rebound.shot = ifelse((event == 'shot') & !is.na(rebound.shot), rebound.shot, 0),
-           in.zone = ifelse((event == 'shot') & !is.na(in.zone), in.zone, 0),
-           out.zone = ifelse((event == 'shot') & !is.na(out.zone), out.zone, 0)) %>%
+    mutate(creates_rebound_shot = ifelse((event == 'shot') & !is.na(creates_rebound_shot), creates_rebound_shot, 0),
+           on_goal = ifelse((event == 'shot') & !is.na(on_goal), on_goal, 0),
+           play_stopped = ifelse((event == 'shot') & !is.na(play_stopped), play_stopped, 0),
+           rebound_shot = ifelse((event == 'shot') & !is.na(rebound_shot), rebound_shot, 0),
+           in_zone = ifelse((event == 'shot') & !is.na(in_zone), in_zone, 0),
+           out_zone = ifelse((event == 'shot') & !is.na(out_zone), out_zone, 0)) %>%
     select(-one_of(drop))
   
   return(d)
@@ -176,97 +175,97 @@ process.data <- function(d) {
 
 # Additional data processing for model use
 process.model.data <- function(d) {
-  d$goal.diff <- as.factor(d$goal.diff)
+  d$goal_diff <- as.factor(d$goal_diff)
   d$shooter <- as.factor(d$shooter)
   d$goalie <- as.factor(d$goalie)
-  d$shot.type <- as.factor(d$shot.type)
-  d$last.event <- as.factor(d$last.event)
+  d$shot_type <- as.factor(d$shot_type)
+  d$last_event <- as.factor(d$last_event)
   
   d <- d %>%
-    select(id, season.type, date, game,
-           team, opposing.team, is.home.team, period,
-           strength.state, time, event,
-           dist, abs.angle,
-           goal.diff, time.since.last, last.event, angle.change,
-           shooter, shooter.position, goalie, shot.type, shot.aim,
-           on.goal, goal, rebound.shot, play.stopped, in.zone, out.zone)
+    select(id, season_type, date, game,
+           team, opposing_team, is_home_team, period,
+           strength_state, time, event,
+           dist, abs_angle,
+           goal_diff, time_since_last, last_event, angle_change,
+           shooter, shooter_position, goalie, shot_type, shot_aim,
+           on_goal, goal, rebound_shot, play_stopped, in_zone, out_zone)
   
   return(d)
 }
 
 # Extract pass data from processed play-by-play
 extract.pass.data <- function(d) {
-  passes.receptions.shots <- d %>%
+  passes_receptions_shots <- d %>%
     filter(event %in% c('shot', 'pass', 'reception'))
   
-  shots.after.receptions <- d %>%
+  shots_after_receptions <- d %>%
     filter(lag(event) == 'reception' &
              lag(period) == period) %>%
     filter(event == 'shot')
   
-  shots.successful.passes.receptions <- passes.receptions.shots %>%
-    filter((event == 'shot' & id %in% shots.after.receptions$id) |
+  shots_successful_passes_receptions <- passes_receptions_shots %>%
+    filter((event == 'shot' & id %in% shots_after_receptions$id) |
              (event %in% c('reception', 'pass') & outcome == 'successful'))
   
   # Invalid pass ids
-  invalid.pass.ids <- shots.successful.passes.receptions %>%
+  invalid_pass_ids <- shots_successful_passes_receptions %>%
     filter((event == 'pass') & ((lead(event) != 'reception') |
                                   (lead(event, 2) != 'shot') |
                                   (id > (max(id) - 2)))) %>%
     select(id)
   
   # Invalid reception ids
-  invalid.reception.ids <- shots.successful.passes.receptions %>%
+  invalid_reception_ids <- shots_successful_passes_receptions %>%
     filter((event == 'reception') & ((lead(event) != 'shot') |
                                        (lag(event) != 'pass') |
                                        (id == max(id)))) %>%
     select(id)
   
   # Valid passes, receptions, shots
-  valid.passes.receptions.shots <- shots.successful.passes.receptions %>%
-    filter(!(id %in% invalid.pass.ids$id) & !(id %in% invalid.reception.ids$id))
+  valid_passes_receptions_shots <- shots_successful_passes_receptions %>%
+    filter(!(id %in% invalid_pass_ids$id) & !(id %in% invalid_reception_ids$id))
   
-  valid.passes <- valid.passes.receptions.shots %>%
+  valid_passes <- valid_passes_receptions_shots %>%
     filter(event %in% c('pass', 'shot')) %>%
-    mutate(resulting.shot.value = ifelse(event == 'pass' & lead(event) == 'shot',
-                                         lead(xgoal.all.no.last),
+    mutate(resulting_shot_value = ifelse(event == 'pass' & lead(event) == 'shot',
+                                         lead(xgoal_all_no_last),
                                          NA)) %>%
     filter(event == 'pass')
   
   # Passes
-  passes <- valid.passes %>%
-    arrange(desc(resulting.shot.value)) %>%
-    mutate(danger = ifelse(resulting.shot.value > quantile(resulting.shot.value, 0.8),
+  passes <- valid_passes %>%
+    arrange(desc(resulting_shot_value)) %>%
+    mutate(danger = ifelse(resulting_shot_value > quantile(resulting_shot_value, 0.8),
                            'high',
                            'low'))
   
   # Players
   players <- passes %>%
     rename(player = shooter,
-           player.position = shooter.position) %>%
+           player_position = shooter_position) %>%
     filter(danger == 'high') %>%
     group_by(player) %>%
     summarise(count = n(),
-              position = unique(player.position))
+              position = unique(player_position))
   
   return(list(passes = passes, players = players))
 }
 
 # Extract offensive zone entry data from play-by-play and summary
 extract.ozone.entry.data <- function(d, summ) {
-  ozone.entries <- d %>%
+  ozone_entries <- d %>%
     filter(event == 'controlledentry' & outcome == 'successful')
   
-  ozone.entries <- ozone.entries[grepl('carry', ozone.entries$type),]
+  ozone_entries <- ozone_entries[grepl('carry', ozone_entries$type),]
   
-  ozone.entries <- ozone.entries %>% filter(y > -40 & y < 0)
+  ozone_entries <- ozone_entries %>% filter(y > -40 & y < 0)
   
-  players <- ozone.entries %>%
+  players <- ozone_entries %>%
     rename(player = shooter,
-           player.position = shooter.position) %>%
+           player_position = shooter_position) %>%
     group_by(player) %>%
     summarise(count = n(),
-              position = unique(player.position))
+              position = unique(player_position))
   
   summ <- summ %>%
     rename(player = Player) %>%
@@ -277,12 +276,12 @@ extract.ozone.entry.data <- function(d, summ) {
   
   players <- left_join(players, summ, by = 'player')
   
-  players$count.per.60 = players$count / (players$toi / (60 * 60))
+  players$count_per_60 = players$count / (players$toi / (60 * 60))
   
   players <- players %>% ungroup()
-  ozone.entries <- ozone.entries %>% ungroup()
+  ozone_entries <- ozone_entries %>% ungroup()
   
-  return(list(ozone.entries = ozone.entries, players = players))
+  return(list(ozone_entries = ozone_entries, players = players))
 }
 
 # Helper function for use when creating rink regions
@@ -297,60 +296,60 @@ format.region <- function(d, name) {
 
 # Assign regions to data
 get.regions <- function(d) {
-  inner.slot <- cbind(c( -7,   7,   7,  -7,  -7),
+  inner_slot <- cbind(c( -7,   7,   7,  -7,  -7),
                       c(-69, -69, -89, -89, -69))
-  right.slot <- cbind(c(-22,  -7,  -7, -22, -22),
+  right_slot <- cbind(c(-22,  -7,  -7, -22, -22),
                       c(-54, -54, -89, -69, -54))
-  left.slot <- cbind(c(  7,  22,  22,   7,   7),
+  left_slot <- cbind(c(  7,  22,  22,   7,   7),
                      c(-54, -54, -69, -89, -54))
-  high.slot <- cbind(c( -7,   7,   7,  -7,  -7),
+  high_slot <- cbind(c( -7,   7,   7,  -7,  -7),
                      c(-54, -54, -69, -69, -54))
   
-  right.outside <- cbind(c(-42.5, -22, -22,  -7, -36.75, -42.5, -42.5),
+  right_outside <- cbind(c(-42.5, -22, -22,  -7, -36.75, -42.5, -42.5),
                          c(  -54, -54, -69, -89,    -89,   -72,   -54))
-  left.outside <- cbind(c( 22, 42.5, 42.5, 36.75,   7,  22,  22),
+  left_outside <- cbind(c( 22, 42.5, 42.5, 36.75,   7,  22,  22),
                         c(-54,  -54,  -72,   -89, -89, -69, -54))
   
-  right.point <- cbind(c(-42.5,  -7,  -7, -42.5, -42.5),
+  right_point <- cbind(c(-42.5,  -7,  -7, -42.5, -42.5),
                        c(  -26, -26, -54,   -54,   -26))
-  left.point <- cbind(c(  7, 42.5, 42.5,   7,   7),
+  left_point <- cbind(c(  7, 42.5, 42.5,   7,   7),
                       c(-26,  -26,  -54, -54, -26))
-  center.point <- cbind(c( -7,   7,   7,  -7,  -7),
+  center_point <- cbind(c( -7,   7,   7,  -7,  -7),
                         c(-26, -26, -54, -54, -26))
   
-  regions <- rbind(format.region(inner.slot, 'inner.slot'),
-                   format.region(right.slot, 'right.slot'),
-                   format.region(left.slot, 'left.slot'),
-                   format.region(high.slot, 'high.slot'),
-                   format.region(right.outside, 'right.outside'),
-                   format.region(left.outside, 'left.outside'),
-                   format.region(right.point, 'right.point'),
-                   format.region(left.point, 'left.point'),
-                   format.region(center.point, 'center.point'))
+  regions <- rbind(format.region(inner_slot, 'inner.slot'),
+                   format.region(right_slot, 'right.slot'),
+                   format.region(left_slot, 'left.slot'),
+                   format.region(high_slot, 'high.slot'),
+                   format.region(right_outside, 'right.outside'),
+                   format.region(left_outside, 'left.outside'),
+                   format.region(right_point, 'right.point'),
+                   format.region(left_point, 'left.point'),
+                   format.region(center_point, 'center.point'))
   
-  s.inner.slot <- Polygons(list(Polygon(inner.slot)), 'inner.slot')
-  s.right.slot <- Polygons(list(Polygon(right.slot)), 'right.slot')
-  s.left.slot <- Polygons(list(Polygon(left.slot)), 'left.slot')
-  s.high.slot <- Polygons(list(Polygon(high.slot)), 'high.slot')
+  s_inner_slot <- Polygons(list(Polygon(inner_slot)), 'inner.slot')
+  s_right_slot <- Polygons(list(Polygon(right_slot)), 'right.slot')
+  s_left_slot <- Polygons(list(Polygon(left_slot)), 'left.slot')
+  s_high_slot <- Polygons(list(Polygon(high_slot)), 'high.slot')
   
-  s.right.outside <- Polygons(list(Polygon(right.outside)), 'right.outside')
-  s.left.outside <- Polygons(list(Polygon(left.outside)), 'left.outside')
+  s_right_outside <- Polygons(list(Polygon(right_outside)), 'right.outside')
+  s_left_outside <- Polygons(list(Polygon(left_outside)), 'left.outside')
   
-  s.right.point <- Polygons(list(Polygon(right.point)), 'right.point')
-  s.left.point <- Polygons(list(Polygon(left.point)), 'left.point')
-  s.center.point <- Polygons(list(Polygon(center.point)), 'center.point')
+  s_right_point <- Polygons(list(Polygon(right_point)), 'right.point')
+  s_left_point <- Polygons(list(Polygon(left_point)), 'left.point')
+  s_center_point <- Polygons(list(Polygon(center_point)), 'center.point')
   
-  s.regions <- SpatialPolygons(list(s.inner.slot,
-                                    s.right.slot,
-                                    s.left.slot,
-                                    s.high.slot,
-                                    s.right.outside,
-                                    s.left.outside,
-                                    s.right.point,
-                                    s.left.point,
-                                    s.center.point))
+  s_regions <- SpatialPolygons(list(s_inner_slot,
+                                    s_right_slot,
+                                    s_left_slot,
+                                    s_high_slot,
+                                    s_right_outside,
+                                    s_left_outside,
+                                    s_right_point,
+                                    s_left_point,
+                                    s_center_point))
   
-  s.regions.df <- SpatialPolygonsDataFrame(s.regions,
+  s_regions_df <- SpatialPolygonsDataFrame(s_regions,
                                            data.frame(region = c('inner.slot',
                                                                  'right.slot',
                                                                  'left.slot',
@@ -371,7 +370,7 @@ get.regions <- function(d) {
                                                                     'center.point')))
   points <- d[, c('x','y')]
   coordinates(points) <- ~x+y
-  result <- over(points, s.regions.df)
+  result <- over(points, s_regions_df)
   
   d <- d %>%
     mutate(region = result$region,
@@ -385,97 +384,97 @@ get.regions.rebounds <- function(d, regions, unblocked = FALSE) {
   if (!unblocked) {
     d2 <- d %>%
       filter(event == 'shot') %>%
-      mutate(rebound.shot.xg = ifelse(creates.rebound.shot == 1,
-                                      lead(xgoal.all.no.last), NA))
-    d2 <- d2 %>% select(id, rebound.shot.xg)
+      mutate(rebound_shot_xg = ifelse(creates_rebound_shot == 1,
+                                      lead(xgoal_all_no_last), NA))
+    d2 <- d2 %>% select(id, rebound_shot_xg)
     d <- left_join(d, d2, by = 'id')
     
     d <- d %>%
-      mutate(rebound.shot.xg = ifelse(event == 'shot', rebound.shot.xg, NA))
+      mutate(rebound_shot_xg = ifelse(event == 'shot', rebound_shot_xg, NA))
     
   } else {
     d2 <- d %>%
       filter((event == 'shot') & !(type %in% c('slotblocked', 'outsideblocked'))) %>%
-      mutate(rebound.shot.xg = ifelse(creates.rebound.shot == 1,
-                                      lead(xgoal.unblocked.no.last), NA))
-    d2 <- d2 %>% select(id, rebound.shot.xg)
+      mutate(rebound_shot_xg = ifelse(creates_rebound_shot == 1,
+                                      lead(xgoal_unblocked_no_last), NA))
+    d2 <- d2 %>% select(id, rebound_shot_xg)
     d <- left_join(d, d2, by = 'id')
     
     d <- d %>%
-      mutate(rebound.shot.xg = ifelse(event == 'shot', rebound.shot.xg, NA))
+      mutate(rebound_shot_xg = ifelse(event == 'shot', rebound_shot_xg, NA))
   }
   
-  d$region.rebound.prob <- NA
-  d$region.rebound.shot.prob <- NA
-  d$region.rebound.shot.xg <- NA
-  d$region.shot.count <- NA
-  d$region.xgoal.all <- NA
-  d$region.xgoal.all.no.last <- NA
+  d$region_rebound_prob <- NA
+  d$region_rebound_shot_prob <- NA
+  d$region_rebound_shot_xg <- NA
+  d$region_shot_count <- NA
+  d$region_xgoal_all <- NA
+  d$region_xgoal_all_no_last <- NA
   
-  d$region.rebound.prob.unblocked <- NA
-  d$region.rebound.shot.prob.unblocked <- NA
-  d$region.rebound.shot.xg.unblocked <- NA
-  d$region.shot.count.unblocked <- NA
-  d$region.xgoal.unblocked <- NA
-  d$region.xgoal.unblocked.no.last <- NA
+  d$region_rebound_prob_unblocked <- NA
+  d$region_rebound_shot_prob_unblocked <- NA
+  d$region_rebound_shot_xg_unblocked <- NA
+  d$region_shot_count_unblocked <- NA
+  d$region_xgoal_unblocked <- NA
+  d$region_xgoal_unblocked_no_last <- NA
   
-  for (region.name in region.names) {
+  for (region_name in region_names) {
     if (!unblocked) {
       # All shot attempts
-      region.rebound.prob <- sum(d$creates.rebound[(d$event == 'shot') & (d$region == region.name)]) / nrow(d[(d$event == 'shot') & (d$region == region.name), ])
-      region.rebound.shot.prob <- sum(d$creates.rebound.shot[(d$event == 'shot') & (d$region == region.name)]) / nrow(d[(d$event == 'shot') & (d$region == region.name), ])
-      region.rebound.shot.xg <- mean(d$rebound.shot.xg[(d$event == 'shot') & (d$region == region.name)], na.rm = TRUE)
-      region.xgoal.all <- mean(d$xgoal.all[(d$event == 'shot') & (d$region == region.name)], na.rm = TRUE)
-      region.xgoal.all.no.last <- mean(d$xgoal.all.no.last[(d$event == 'shot') & (d$region == region.name)], na.rm = TRUE)
+      region_rebound_prob <- sum(d$creates_rebound[(d$event == 'shot') & (d$region == region_name)]) / nrow(d[(d$event == 'shot') & (d$region == region_name), ])
+      region_rebound_shot_prob <- sum(d$creates_rebound_shot[(d$event == 'shot') & (d$region == region_name)]) / nrow(d[(d$event == 'shot') & (d$region == region_name), ])
+      region_rebound_shot_xg <- mean(d$rebound_shot_xg[(d$event == 'shot') & (d$region == region_name)], na.rm = TRUE)
+      region_xgoal_all <- mean(d$xgoal_all[(d$event == 'shot') & (d$region == region_name)], na.rm = TRUE)
+      region_xgoal_all_no_last <- mean(d$xgoal_all_no_last[(d$event == 'shot') & (d$region == region_name)], na.rm = TRUE)
       
-      regions$region.rebound.prob[regions$region == region.name] <- region.rebound.prob
-      regions$region.rebound.shot.prob[regions$region == region.name] <- region.rebound.shot.prob
-      regions$region.rebound.shot.xg[regions$region == region.name] <- region.rebound.shot.xg
-      regions$region.xgoal.all[regions$region == region.name] <- region.xgoal.all
-      regions$region.xgoal.all.no.last[regions$region == region.name] <- region.xgoal.all.no.last
+      regions$region_rebound_prob[regions$region == region_name] <- region_rebound_prob
+      regions$region_rebound_shot_prob[regions$region == region_name] <- region_rebound_shot_prob
+      regions$region_rebound_shot_xg[regions$region == region_name] <- region_rebound_shot_xg
+      regions$region_xgoal_all[regions$region == region_name] <- region_xgoal_all
+      regions$region_xgoal_all_no_last[regions$region == region_name] <- region_xgoal_all_no_last
       
-      d$region.rebound.prob[d$region == region.name] <- region.rebound.prob
-      d$region.rebound.shot.prob[d$region == region.name] <- region.rebound.shot.prob
-      d$region.rebound.shot.xg[d$region == region.name] <- region.rebound.shot.xg
-      d$region.xgoal.all[d$region == region.name] <- region.xgoal.all
-      d$region.xgoal.all.no.last[d$region == region.name] <- region.xgoal.all.no.last
+      d$region_rebound_prob[d$region == region_name] <- region_rebound_prob
+      d$region_rebound_shot_prob[d$region == region_name] <- region_rebound_shot_prob
+      d$region_rebound_shot_xg[d$region == region_name] <- region_rebound_shot_xg
+      d$region_xgoal_all[d$region == region_name] <- region_xgoal_all
+      d$region_xgoal_all_no_last[d$region == region_name] <- region_xgoal_all_no_last
       
-      region.shot.count <- nrow(d[(d$event == 'shot') & (d$region == region.name), ])
-      d$region.shot.count[d$region == region.name] <- region.shot.count
-      regions$region.shot.count[regions$region == region.name] <- region.shot.count
+      region_shot_count <- nrow(d[(d$event == 'shot') & (d$region == region_name), ])
+      d$region_shot_count[d$region == region_name] <- region_shot_count
+      regions$region_shot_count[regions$region == region_name] <- region_shot_count
       
     } else {
       # Unblocked shot attempts
-      region.rebound.prob.unblocked <- sum(d$creates.rebound[(d$event == 'shot') & !(d$type %in% c('slotblocked', 'outsideblocked')) & (d$region == region.name)]) / nrow(d[(d$event == 'shot') & !(d$type %in% c('slotblocked', 'outsideblocked')) & (d$region == region.name), ])
-      region.rebound.shot.prob.unblocked <- sum(d$creates.rebound.shot[(d$event == 'shot') & !(d$type %in% c('slotblocked', 'outsideblocked')) & (d$region == region.name)]) / nrow(d[(d$event == 'shot') & !(d$type %in% c('slotblocked', 'outsideblocked')) & (d$region == region.name), ])
-      region.rebound.shot.xg.unblocked <- mean(d$rebound.shot.xg[(d$event == 'shot') & !(d$type %in% c('slotblocked', 'outsideblocked')) & (d$region == region.name)], na.rm = TRUE)
-      region.xgoal.unblocked <- mean(d$xgoal.unblocked[(d$event == 'shot') & (d$region == region.name)], na.rm = TRUE)
-      region.xgoal.unblocked.no.last <- mean(d$xgoal.unblocked.no.last[(d$event == 'shot') & (d$region == region.name)], na.rm = TRUE)
+      region_rebound_prob_unblocked <- sum(d$creates_rebound[(d$event == 'shot') & !(d$type %in% c('slotblocked', 'outsideblocked')) & (d$region == region_name)]) / nrow(d[(d$event == 'shot') & !(d$type %in% c('slotblocked', 'outsideblocked')) & (d$region == region_name), ])
+      region_rebound_shot_prob_unblocked <- sum(d$creates_rebound_shot[(d$event == 'shot') & !(d$type %in% c('slotblocked', 'outsideblocked')) & (d$region == region_name)]) / nrow(d[(d$event == 'shot') & !(d$type %in% c('slotblocked', 'outsideblocked')) & (d$region == region_name), ])
+      region_rebound_shot_xg_unblocked <- mean(d$rebound_shot_xg[(d$event == 'shot') & !(d$type %in% c('slotblocked', 'outsideblocked')) & (d$region == region_name)], na.rm = TRUE)
+      region_xgoal_unblocked <- mean(d$xgoal_unblocked[(d$event == 'shot') & (d$region == region_name)], na.rm = TRUE)
+      region_xgoal_unblocked_no_last <- mean(d$xgoal_unblocked_no_last[(d$event == 'shot') & (d$region == region_name)], na.rm = TRUE)
       
-      regions$region.rebound.prob.unblocked[regions$region == region.name] <- region.rebound.prob.unblocked
-      regions$region.rebound.shot.prob.unblocked[regions$region == region.name] <- region.rebound.shot.prob.unblocked
-      regions$region.rebound.shot.xg.unblocked[regions$region == region.name] <- region.rebound.shot.xg.unblocked
-      regions$region.xgoal.unblocked[regions$region == region.name] <- region.xgoal.unblocked
-      regions$region.xgoal.unblocked.no.last[regions$region == region.name] <- region.xgoal.unblocked.no.last
+      regions$region_rebound_prob_unblocked[regions$region == region_name] <- region_rebound_prob_unblocked
+      regions$region_rebound_shot_prob_unblocked[regions$region == region_name] <- region_rebound_shot_prob_unblocked
+      regions$region_rebound_shot_xg_unblocked[regions$region == region_name] <- region_rebound_shot_xg_unblocked
+      regions$region_xgoal_unblocked[regions$region == region_name] <- region_xgoal_unblocked
+      regions$region_xgoal_unblocked_no_last[regions$region == region_name] <- region_xgoal_unblocked_no_last
       
-      d$region.rebound.prob.unblocked[d$region == region.name] <- region.rebound.prob.unblocked
-      d$region.rebound.shot.prob.unblocked[d$region == region.name] <- region.rebound.shot.prob.unblocked
-      d$region.rebound.shot.xg.unblocked[d$region == region.name] <- region.rebound.shot.xg.unblocked
-      d$region.xgoal.unblocked[d$region == region.name] <- region.xgoal.unblocked
-      d$region.xgoal.unblocked.no.last[d$region == region.name] <- region.xgoal.unblocked.no.last
+      d$region_rebound_prob_unblocked[d$region == region_name] <- region_rebound_prob_unblocked
+      d$region_rebound_shot_prob_unblocked[d$region == region_name] <- region_rebound_shot_prob_unblocked
+      d$region_rebound_shot_xg_unblocked[d$region == region_name] <- region_rebound_shot_xg_unblocked
+      d$region_xgoal_unblocked[d$region == region_name] <- region_xgoal_unblocked
+      d$region_xgoal_unblocked_no_last[d$region == region_name] <- region_xgoal_unblocked_no_last
       
-      region.shot.count.unblocked <- nrow(d[(d$event == 'shot') & !(d$type %in% c('slotblocked', 'outsideblocked')) & (d$region == region.name), ])
-      d$region.shot.count.unblocked[d$region == region.name] <- region.shot.count.unblocked
-      regions$region.shot.count.unblocked[regions$region == region.name] <- region.shot.count.unblocked
+      region_shot_count_unblocked <- nrow(d[(d$event == 'shot') & !(d$type %in% c('slotblocked', 'outsideblocked')) & (d$region == region_name), ])
+      d$region_shot_count_unblocked[d$region == region_name] <- region_shot_count_unblocked
+      regions$region_shot_count_unblocked[regions$region == region_name] <- region_shot_count_unblocked
     }
   }
   
   if (!unblocked) {
-    regions$region.rebound.total <- regions$region.rebound.prob * regions$region.rebound.shot.prob * regions$region.rebound.shot.xg
-    d$region.rebound.total <- d$region.rebound.prob * d$region.rebound.shot.prob * d$region.rebound.shot.xg
+    regions$region_rebound_total <- regions$region_rebound_prob * regions$region_rebound_shot_prob * regions$region_rebound_shot_xg
+    d$region_rebound_total <- d$region_rebound_prob * d$region_rebound_shot_prob * d$region_rebound_shot_xg
   } else {
-    regions$region.rebound.total.unblocked <- regions$region.rebound.prob.unblocked * regions$region.rebound.shot.prob.unblocked * regions$region.rebound.shot.xg.unblocked
-    d$region.rebound.total.unblocked <- d$region.rebound.prob.unblocked * d$region.rebound.shot.prob.unblocked * d$region.rebound.shot.xg.unblocked
+    regions$region_rebound_total_unblocked <- regions$region_rebound_prob_unblocked * regions$region_rebound_shot_prob_unblocked * regions$region_rebound_shot_xg_unblocked
+    d$region_rebound_total_unblocked <- d$region_rebound_prob_unblocked * d$region_rebound_shot_prob_unblocked * d$region_rebound_shot_xg_unblocked
   }
   
   return(list(d = d, regions = regions))
@@ -494,10 +493,10 @@ get.shots <- function(d, unblocked = FALSE) {
 
 # Get shots that generate rebounds
 get.shots.generating.rebounds <- function(d, unblocked = FALSE) {
-  return(get.shots(d, unblocked = unblocked) %>% filter(creates.rebound == 1))
+  return(get.shots(d, unblocked = unblocked) %>% filter(creates_rebound == 1))
 }
 
 # Get shots that generate rebound shots
 get.shots.generating.rebound.shots <- function(d, unblocked = FALSE) {
-  return(get.shots.generating.rebounds(d, unblocked = unblocked) %>% filter(creates.rebound.shot == 1))
+  return(get.shots.generating.rebounds(d, unblocked = unblocked) %>% filter(creates_rebound_shot == 1))
 }
