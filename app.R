@@ -1,7 +1,7 @@
 library(shinydashboard)
 
 ui <- dashboardPage(
-  dashboardHeader(title = 'Hockey visualization'),
+  dashboardHeader(title = 'Evaluating rebounds'),
   
   dashboardSidebar(
     sidebarMenu(
@@ -325,19 +325,17 @@ ui <- dashboardPage(
                     goal line, while those leading to low danger shots 
                     primarily originate from the point. Overall, these passes 
                     originate from regions outside the slot (where players are 
-                    more likely to shoot).',
-                      br(),
-                      br(),
-                      'Visualizing successful offensive zone entry locations 
-                    show that they are concentrated near the point as opposed 
-                    to center ice.',
+                    more likely to shoot). Visualizing successful offensive 
+                    zone entry locations show that they are concentrated near 
+                    the point as opposed to center ice.',
                       br(),
                       br(),
                       'Forwards, reasonably, are ranked high in both high danger 
                     passes and successful offensive zone entries, reasonably, 
                     with only 2 defensemen in the top 20 for high danger 
                     passes, and no defensemen in the top 20 for successful 
-                    entries.',
+                    entries. These features are candidates for future shot and 
+                    rebound valuation models.',
                       br(),
                       br(),
                       'Data cleaning and visualization were done using R.',
@@ -350,10 +348,9 @@ ui <- dashboardPage(
       tabItem(tabName = 'info',
               fluidRow(
                 box(title = 'Project info',
-                    p('Created by Jacqueline (github.com/j-cqln).',
-                      'Source code available',
+                    p('Source code available',
                       a('here',
-                        href = 'https://github.com/j-cqln/hockey-visualization'),
+                        href = 'https://github.com/j-cqln/evaluating-rebounds'),
                       'on GitHub.',
                       br(),
                       br(),
@@ -361,9 +358,8 @@ ui <- dashboardPage(
                     rink plotting function.',
                       br(),
                       br(),
-                      'Initial version (July 2, 2023) with women\'s hockey 
-                      data was made as an entry to the Viz Launchpad 
-                      competition hosted by WHKYHAC + Sportlogiq.',
+                      'Initial version (July 2, 2023) made as an entry to the 
+                    Viz Launchpad competition hosted by WHKYHAC + Sportlogiq.',
                       br(),
                       br(),
                       'Women\'s hockey data from Viz Launchpad, WHKYHAC + 
