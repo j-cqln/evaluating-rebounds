@@ -358,15 +358,15 @@ ui <- dashboardPage(
                     rink plotting function.',
                       br(),
                       br(),
-                      'Initial version (July 2, 2023) made as an entry to the 
-                    Viz Launchpad competition hosted by WHKYHAC + Sportlogiq.',
+                      'Initial version made as an entry to the Viz Launchpad
+                    competition hosted by WHKYHAC + Sportlogiq.',
                       br(),
                       br(),
                       'Women\'s hockey data from Viz Launchpad, WHKYHAC + 
                     Sportlogiq.',
                       br(),
                       br(),
-                      'NHL shot data from MoneyPuck.com.',
+                      'NHL shots data from MoneyPuck.com.',
                       style = 'font-size:16px;margin:5px;'),
                     width = 4,
                     status = 'primary',
